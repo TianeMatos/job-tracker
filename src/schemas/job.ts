@@ -16,5 +16,5 @@ export const updateJobSchema = jobSchema.partial().extend({
   id: z.uuid({ error: "ID inválido." }),
 });
 
-export type JobSchema = z.infer<typeof jobSchema>
+export type JobInput = z.infer<typeof jobSchema>
 export type UpdateJobInput = z.infer<typeof updateJobSchema>

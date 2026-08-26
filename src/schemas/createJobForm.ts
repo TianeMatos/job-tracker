@@ -36,4 +36,4 @@ export const createJobFormSchema = z
     // }
   });
 
-export type CreateJobFormSchema = z.infer<typeof createJobFormSchema>
+export type CreateJobForm = z.infer<typeof createJobFormSchema>
