@@ -2,6 +2,7 @@ import { z } from "zod"
 
 export const workplaceTypeSchema = z.enum(["REMOTE", "HYBRID", "ON_SITE"])
 
+//* Schema do Zod
 export const jobSchema = z.object({
   company: z.string().trim().min(1, { error: "Informe a empresa." }),
   role: z.string().trim().min(1, { error: "Informe o cargo." }),
@@ -12,9 +13,8 @@ export const jobSchema = z.object({
   workplaceType: workplaceTypeSchema.default("REMOTE"),
 });
 
-export const updateJobSchema = jobSchema.partial().extend({
-  id: z.uuid({ error: "ID inválido." }),
-});
+export const updateJobSchema = jobSchema.partial();
 
+//* Tipo TypeScript
 export type JobInput = z.infer<typeof jobSchema>
 export type UpdateJobInput = z.infer<typeof updateJobSchema>
