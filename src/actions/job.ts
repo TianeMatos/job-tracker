@@ -1,8 +1,10 @@
 "use server";
 
+import { Prisma } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/auth-session";
 import prisma from "@/lib/prisma";
 import { createJobFormSchema } from "@/schemas/createJobForm";
+import { jobIdSchema, updateJobSchema } from "@/schemas/job";
 import z from "zod";
 
 export async function createJobAction(input: unknown) {
@@ -14,28 +16,18 @@ export async function createJobAction(input: unknown) {
     return { success: false, error: prettyError };
   }
 
-  const data = dataValidation.data;
+  const { application, hasApplied, ...jobData } = dataValidation.data;
   try {
     const job = await prisma.job.create({
       data: {
         userId: session.user.id,
-        company: data.company,
-        role: data.role,
-        description: data.description,
-        jobUrl: data.jobUrl,
-        salary: data.salary,
-        location: data.location,
-        workplaceType: data.workplaceType,
-        ...(data.hasApplied && data.application
+        ...jobData,
+        ...(hasApplied && application
           ? {
               application: {
                 create: {
                   userId: session.user.id,
-                  status: data.application.status,
-                  appliedAt: data.application.appliedAt,
-                  contactName: data.application.contactName,
-                  contactEmail: data.application.contactEmail,
-                  interviewDate: data.application.interviewDate,
+                  ...application,
                 },
               },
             }
@@ -53,6 +45,111 @@ export async function createJobAction(input: unknown) {
     return {
       success: false,
       error: "Ocorreu um erro ao salvar a vaga. Tente novamente.",
+    };
+  }
+}
+
+export async function getJobsAction() {
+  const session = await requireAuth();
+
+  try {
+    const jobs = await prisma.job.findMany({
+      where: { userId: session.user.id },
+      include: { application: true },
+    });
+
+    return { success: true, jobs };
+  } catch (error) {
+    console.error("Erro inesperado no getJobsAction:", error);
+    return {
+      success: false,
+      error: "Ocorreu um erro ao buscar as vagas. Tente novamente.",
+    };
+  }
+}
+
+export async function getJobAction(id: string) {
+  const session = await requireAuth();
+  const idValidation = jobIdSchema.safeParse(id);
+  if (!idValidation.success)
+    return { success: false, error: "ID da vaga inválido." };
+
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: idValidation.data, userId: session.user.id },
+      include: { application: true },
+    });
+    if (!job) return { success: false, error: "Vaga não encontrada." };
+
+    return { success: true, job };
+  } catch (error) {
+    console.error("Erro inesperado no getJobAction:", error);
+    return {
+      success: false,
+      error: "Ocorreu um erro ao buscar uma vaga. Tente novamente.",
+    };
+  }
+}
+
+export async function updateJobAction(id: string, input: unknown) {
+  const session = await requireAuth();
+  const idValidation = jobIdSchema.safeParse(id);
+  if (!idValidation.success)
+    return { success: false, error: "ID da vaga inválido." };
+
+  const dataValidation = updateJobSchema.safeParse(input);
+  if (!dataValidation.success) {
+    const prettyError = z.prettifyError(dataValidation.error);
+    return { success: false, error: prettyError };
+  }
+
+  try {
+    const job = await prisma.job.update({
+      where: { id: idValidation.data, userId: session.user.id },
+      data: dataValidation.data,
+      include: { application: true },
+    });
+
+    return { success: true, job };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return { success: false, error: "Vaga não encontrada." };
+    }
+    console.error("Erro inesperado no updateJobAction:", error);
+    return {
+      success: false,
+      error: "Ocorreu um erro ao editar uma vaga. Tente novamente.",
+    };
+  }
+}
+
+export async function deleteJobAction(id: string) {
+  const session = await requireAuth();
+  const idValidation = jobIdSchema.safeParse(id);
+  if (!idValidation.success)
+    return { success: false, error: "ID da vaga inválido." };
+
+  try {
+    const job = await prisma.job.delete({
+      where: { id: idValidation.data, userId: session.user.id },
+      include: { application: true },
+    });
+
+    return { success: true, job };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return { success: false, error: "Vaga não encontrada." };
+    }
+    console.error("Erro inesperado no deleteJobAction:", error);
+    return {
+      success: false,
+      error: "Ocorreu um erro ao excluir uma vaga. Tente novamente.",
     };
   }
 }
