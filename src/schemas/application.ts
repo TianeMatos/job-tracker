@@ -7,19 +7,22 @@ export const applicationStatusSchema = z.enum([
   "TECHNICAL_TEST",
   "PROPOSAL",
   "REJECTED",
+  "HIRED",
 ]);
 
-export const applicationSchema = z.object({
-  status: applicationStatusSchema.default("APPLIED"),
+export const updateApplicationStatusSchema = z.object({
+  status: applicationStatusSchema,
+});
+export type UpdateApplicationStatusInput = z.infer<typeof updateApplicationStatusSchema>;
+
+export const applicationDetailsSchema = z.object({
   appliedAt: z.coerce.date().optional(),
   contactName: z.string().trim().optional(),
-  contactEmail: z.string().trim().pipe(z.email({ error: "E-mail inválido." })).optional().or(z.literal("")),
+  contactEmail: z.email({ error: "E-mail inválido." }).optional().or(z.literal("")),
   interviewDate: z.coerce.date().optional(),
 });
 
-export const updateApplicationSchema = applicationSchema.extend({
-  id: z.uuid({ error: "ID inválido." }),
-});
+export const updateApplicationDetailsSchema = applicationDetailsSchema.partial();
 
-export type ApplicationSchema = z.infer<typeof applicationSchema>
-export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>
+export type ApplicationDetailsSchema = z.infer<typeof applicationDetailsSchema>;
+export type UpdateApplicationDetailsInput = z.infer<typeof updateApplicationDetailsSchema>;
