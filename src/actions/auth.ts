@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import z from "zod";
 
 export async function signUpAction(input: SignUpInput) {
-  const dataValidation = await signUpSchema.safeParseAsync(input);
+  const dataValidation = signUpSchema.safeParse(input);
   
   if (!dataValidation.success) {
     const prettyError = z.prettifyError(dataValidation.error);
@@ -36,7 +36,7 @@ export async function signUpAction(input: SignUpInput) {
 }
 
 export async function signInAction(input: SignInInput) {
-  const dataValidation = await signInSchema.safeParseAsync(input);
+  const dataValidation = signInSchema.safeParse(input);
   
   if (!dataValidation.success) {
     const prettyError = z.prettifyError(dataValidation.error);
