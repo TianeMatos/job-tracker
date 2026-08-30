@@ -20,6 +20,7 @@ enum ApplicationStatus {
   TECHNICAL_TEST
   PROPOSAL
   REJECTED
+  HIRED
 }
 
 model User {
