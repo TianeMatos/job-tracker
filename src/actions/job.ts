@@ -7,13 +7,12 @@ import { createJobFormSchema } from "@/schemas/createJobForm";
 import { jobIdSchema, updateJobSchema } from "@/schemas/job";
 import z from "zod";
 
-export async function createJobAction(input: unknown) {
+export async function createJob(input: unknown) {
   const session = await requireAuth();
 
   const dataValidation = createJobFormSchema.safeParse(input);
   if (!dataValidation.success) {
-    const prettyError = z.prettifyError(dataValidation.error);
-    return { success: false, error: prettyError };
+    return { success: false, error: z.prettifyError(dataValidation.error) };
   }
 
   const { application, hasApplied, ...jobData } = dataValidation.data;
@@ -49,7 +48,8 @@ export async function createJobAction(input: unknown) {
   }
 }
 
-export async function getJobsAction() {
+//* Usar no Dashboard / job list
+export async function getJobs() {
   const session = await requireAuth();
 
   try {
@@ -68,11 +68,13 @@ export async function getJobsAction() {
   }
 }
 
-export async function getJobAction(id: string) {
+//* Usar no job details
+export async function getJobById(id: string) {
   const session = await requireAuth();
   const idValidation = jobIdSchema.safeParse(id);
-  if (!idValidation.success)
+  if (!idValidation.success) {
     return { success: false, error: "ID da vaga inválido." };
+  }
 
   try {
     const job = await prisma.job.findUnique({
@@ -91,16 +93,16 @@ export async function getJobAction(id: string) {
   }
 }
 
-export async function updateJobAction(id: string, input: unknown) {
+export async function updateJob(id: string, input: unknown) {
   const session = await requireAuth();
   const idValidation = jobIdSchema.safeParse(id);
-  if (!idValidation.success)
+  if (!idValidation.success) {
     return { success: false, error: "ID da vaga inválido." };
+  }
 
   const dataValidation = updateJobSchema.safeParse(input);
   if (!dataValidation.success) {
-    const prettyError = z.prettifyError(dataValidation.error);
-    return { success: false, error: prettyError };
+    return { success: false, error: z.prettifyError(dataValidation.error) };
   }
 
   try {
@@ -126,11 +128,12 @@ export async function updateJobAction(id: string, input: unknown) {
   }
 }
 
-export async function deleteJobAction(id: string) {
+export async function deleteJob(id: string) {
   const session = await requireAuth();
   const idValidation = jobIdSchema.safeParse(id);
-  if (!idValidation.success)
+  if (!idValidation.success) {
     return { success: false, error: "ID da vaga inválido." };
+  }
 
   try {
     const job = await prisma.job.delete({
