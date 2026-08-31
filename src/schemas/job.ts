@@ -23,5 +23,6 @@ export const updateJobSchema = jobSchema.partial().refine(
 );
 
 //* Tipo TypeScript
+export type JobId = z.infer<typeof jobIdSchema>
 export type JobInput = z.infer<typeof jobSchema>
 export type UpdateJobInput = z.infer<typeof updateJobSchema>

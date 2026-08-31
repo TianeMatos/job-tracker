@@ -1,6 +1,6 @@
 import z from "zod";
 import { jobSchema } from "./job";
-import { applicationSchema, applicationStatusSchema } from "./application";
+import { applicationDetailsSchema, applicationStatusSchema } from "./application";
 
 const jobNotAppliedSchema = z.object({
   ...jobSchema.shape,
@@ -11,9 +11,8 @@ const jobNotAppliedSchema = z.object({
 const jobAppliedSchema = z.object({
   ...jobSchema.shape,
   hasApplied: z.literal(true),
-  application: applicationSchema.extend({
-    status: applicationStatusSchema,
-    appliedAt: z.coerce.date({ error: "Informe a data da candidatura." }),
+  application: applicationDetailsSchema.extend({
+    status: applicationStatusSchema
   }),
 });
 
