@@ -17,7 +17,7 @@ export async function applyToJob(jobId: string) {
 
   const idValidation = jobIdSchema.safeParse(jobId);
   if (!idValidation.success) {
-    return { success: false, error: idValidation.error.message };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
@@ -98,7 +98,7 @@ export async function getApplicationById(id: string) {
 
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: idValidation.error.message };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
@@ -131,7 +131,7 @@ export async function updateApplicationStatus(id: string, input: unknown) {
 
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: idValidation.error.message };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   const dataValidation = applicationStatusSchema.safeParse(input);
@@ -174,7 +174,7 @@ export async function updateApplicationDetails(id: string, input: unknown) {
 
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: idValidation.error.message };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   const dataValidation = applicationDetailsSchema.safeParse(input);
@@ -217,7 +217,7 @@ export async function deleteApplication(id: string) {
 
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: idValidation.error.message };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {

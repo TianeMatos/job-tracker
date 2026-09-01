@@ -1,4 +1,4 @@
-import { createJobAction, getJobsAction } from "@/actions/job";
+import { createJob, getJobs } from "@/actions/job";
 import { NextResponse } from "next/server";
 
 //* POST Create a Job / Job + Application
@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    const result = await createJobAction(body);
+    const result = await createJob(body);
     if (!result.success) {
       return NextResponse.json(result, { status: 400 })
     }
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 //* GET all Jobs
 export async function GET() {
   try {
-    const result = await getJobsAction();
+    const result = await getJobs();
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 })

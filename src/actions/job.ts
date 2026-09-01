@@ -73,7 +73,7 @@ export async function getJobById(id: string) {
   const session = await requireAuth();
   const idValidation = jobIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: "ID da vaga inválido." };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
@@ -97,7 +97,7 @@ export async function updateJob(id: string, input: unknown) {
   const session = await requireAuth();
   const idValidation = jobIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: "ID da vaga inválido." };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   const dataValidation = updateJobSchema.safeParse(input);
@@ -130,9 +130,10 @@ export async function updateJob(id: string, input: unknown) {
 
 export async function deleteJob(id: string) {
   const session = await requireAuth();
+
   const idValidation = jobIdSchema.safeParse(id);
   if (!idValidation.success) {
-    return { success: false, error: "ID da vaga inválido." };
+    return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
