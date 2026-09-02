@@ -6,7 +6,7 @@ import { isAPIError } from "better-auth/api";
 import { headers } from "next/headers";
 import z from "zod";
 
-export async function signUpAction(input: SignUpInput) {
+export async function signUp(input: SignUpInput) {
   const dataValidation = signUpSchema.safeParse(input);
   
   if (!dataValidation.success) {
@@ -15,7 +15,7 @@ export async function signUpAction(input: SignUpInput) {
   }
   
   try {
-    const data = await auth.api.signUpEmail({ 
+    await auth.api.signUpEmail({ 
       body: { 
         name: dataValidation.data.name,
         email: dataValidation.data.email,
@@ -24,7 +24,7 @@ export async function signUpAction(input: SignUpInput) {
       headers: await headers(),
     });
 
-    return { success: true, data }
+    return { success: true, }
   } catch (error) {
     if (isAPIError(error)) {
       return { success: false, error: error.message }
@@ -35,7 +35,7 @@ export async function signUpAction(input: SignUpInput) {
   }
 }
 
-export async function signInAction(input: SignInInput) {
+export async function signIn(input: SignInInput) {
   const dataValidation = signInSchema.safeParse(input);
   
   if (!dataValidation.success) {
@@ -44,7 +44,7 @@ export async function signInAction(input: SignInInput) {
   }
   
   try {
-    const data = await auth.api.signInEmail({ 
+    await auth.api.signInEmail({ 
       body: { 
         email: dataValidation.data.email,
         password: dataValidation.data.password
@@ -52,7 +52,7 @@ export async function signInAction(input: SignInInput) {
       headers: await headers(),
     });
 
-    return { success: true, data }
+    return { success: true }
   } catch (error) {
     if (isAPIError(error)) {
       return { success: false, error: error.message }
@@ -63,11 +63,11 @@ export async function signInAction(input: SignInInput) {
   }
 }
 
-export async function signOutAction() {
+export async function signOut() {
   try {
-    const data = await auth.api.signOut({ headers: await headers(), });
+    await auth.api.signOut({ headers: await headers(), });
 
-    return { success: true, data }
+    return { success: true }
   } catch (error) {
     if (isAPIError(error)) {
       return { success: false, error: error.message }

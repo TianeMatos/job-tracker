@@ -9,18 +9,19 @@ import {
   applicationStatusSchema,
 } from "@/schemas/application";
 import { jobIdSchema } from "@/schemas/job";
+import { revalidatePath } from "next/cache";
 import z from "zod";
 
 //* Create Application
 export async function applyToJob(jobId: string) {
-  const session = await requireAuth();
-
   const idValidation = jobIdSchema.safeParse(jobId);
   if (!idValidation.success) {
     return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
+    const session = await requireAuth();
+
     const job = await prisma.job.findUnique({
       where: { id: idValidation.data, userId: session.user.id },
       include: { application: true },
@@ -41,8 +42,14 @@ export async function applyToJob(jobId: string) {
         jobId: job.id,
         status: "APPLIED",
       },
-      include: { job: true, notes: true }
+      include: { job: true, notes: true },
     });
+
+    revalidatePath("/saved-jobs");
+    revalidatePath("/kanban");
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${application.jobId}`);
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -59,7 +66,9 @@ export async function applyToJob(jobId: string) {
       };
     }
 
-    console.error("Erro inesperado no applyToJobAction:", error);
+    if (error instanceof Error && error.message === "Não autenticado.") {
+      return { success: false, error: error.message };
+    }
 
     return {
       success: false,
@@ -70,12 +79,12 @@ export async function applyToJob(jobId: string) {
 
 //* Get All Applications -> Use on kanban
 export async function getApplications() {
-  const session = await requireAuth();
-
   try {
+    const session = await requireAuth();
+
     const applications = await prisma.application.findMany({
       where: { userId: session.user.id },
-      include: { job: true, notes: true }
+      include: { job: true, notes: true },
     });
 
     return {
@@ -83,7 +92,9 @@ export async function getApplications() {
       applications,
     };
   } catch (error) {
-    console.error("Erro inesperado no getApplicationsAction:", error);
+    if (error instanceof Error && error.message === "Não autenticado.") {
+      return { success: false, error: error.message };
+    }
 
     return {
       success: false,
@@ -94,17 +105,17 @@ export async function getApplications() {
 
 //* Get One Application -> Use on update form
 export async function getApplicationById(id: string) {
-  const session = await requireAuth();
-
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
     return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
+    const session = await requireAuth();
+
     const application = await prisma.application.findUnique({
       where: { id: idValidation.data, userId: session.user.id },
-      include: { job: true, notes: true }
+      include: { job: true, notes: true },
     });
 
     if (!application) {
@@ -116,7 +127,9 @@ export async function getApplicationById(id: string) {
       application,
     };
   } catch (error) {
-    console.error("Erro inesperado no getApplicationByIdAction:", error);
+    if (error instanceof Error && error.message === "Não autenticado.") {
+      return { success: false, error: error.message };
+    }
 
     return {
       success: false,
@@ -127,8 +140,6 @@ export async function getApplicationById(id: string) {
 
 //* Update status -> input: status
 export async function updateApplicationStatus(id: string, input: unknown) {
-  const session = await requireAuth();
-
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
     return { success: false, error: z.prettifyError(idValidation.error) };
@@ -140,11 +151,17 @@ export async function updateApplicationStatus(id: string, input: unknown) {
   }
 
   try {
+    const session = await requireAuth();
+
     const application = await prisma.application.update({
       where: { id: idValidation.data, userId: session.user.id },
       data: { status: dataValidation.data },
-      include: { job: true, notes: true }
+      include: { job: true, notes: true },
     });
+
+    revalidatePath("/kanban");
+    revalidatePath("/dashboard");
+    revalidatePath(`/jobs/${application.jobId}`);
 
     return {
       success: true,
@@ -158,7 +175,9 @@ export async function updateApplicationStatus(id: string, input: unknown) {
       return { success: false, error: "Candidatura não encontrada!" };
     }
 
-    console.error("Erro inesperado no updateApplicationStatusAction:", error);
+    if (error instanceof Error && error.message === "Não autenticado.") {
+      return { success: false, error: error.message };
+    }
 
     return {
       success: false,
@@ -170,8 +189,6 @@ export async function updateApplicationStatus(id: string, input: unknown) {
 
 //* Update other infos of application
 export async function updateApplicationDetails(id: string, input: unknown) {
-  const session = await requireAuth();
-
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
     return { success: false, error: z.prettifyError(idValidation.error) };
@@ -183,11 +200,15 @@ export async function updateApplicationDetails(id: string, input: unknown) {
   }
 
   try {
+    const session = await requireAuth();
+
     const application = await prisma.application.update({
       where: { id: idValidation.data, userId: session.user.id },
       data: { ...dataValidation.data },
-      include: { job: true, notes: true }
+      include: { job: true, notes: true },
     });
+
+    revalidatePath(`/jobs/${application.jobId}`);
 
     return {
       success: true,
@@ -201,7 +222,9 @@ export async function updateApplicationDetails(id: string, input: unknown) {
       return { success: false, error: "Candidatura não encontrada!" };
     }
 
-    console.error("Erro inesperado no updateApplicationDetailsAction:", error);
+    if (error instanceof Error && error.message === "Não autenticado.") {
+      return { success: false, error: error.message };
+    }
 
     return {
       success: false,
@@ -213,18 +236,23 @@ export async function updateApplicationDetails(id: string, input: unknown) {
 
 //* Delete application
 export async function deleteApplication(id: string) {
-  const session = await requireAuth();
-
   const idValidation = applicationIdSchema.safeParse(id);
   if (!idValidation.success) {
     return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
   try {
+    const session = await requireAuth();
+
     const application = await prisma.application.delete({
       where: { id: idValidation.data, userId: session.user.id },
-      include: { job: true, notes: true }
+      include: { job: true, notes: true },
     });
+
+    revalidatePath("/kanban");
+    revalidatePath("/saved-jobs");
+    revalidatePath(`/jobs/${application.jobId}`);
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -241,7 +269,9 @@ export async function deleteApplication(id: string) {
       };
     }
 
-    console.error("Erro inesperado no deleteApplicationAction:", error);
+    if (error instanceof Error && error.message === "Não autenticado.") {
+      return { success: false, error: error.message };
+    }
 
     return {
       success: false,
