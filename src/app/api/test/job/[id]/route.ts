@@ -1,4 +1,4 @@
-import { deleteJobAction, getJobAction, updateJobAction } from "@/actions/job";
+import { deleteJob, getJobById, updateJob } from "@/actions/job";
 import { UpdateJobInput } from "@/schemas/job";
 import { NextResponse } from "next/server";
 
@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request, { params }: { params: Promise<{ id: string}> }) {
   try {
     const { id } = await params;
-    const result = await getJobAction(id);
+    const result = await getJobById(id);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 })
@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body: UpdateJobInput = await request.json();
-    const result = await updateJobAction(id, body);
+    const result = await updateJob(id, body);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 })
@@ -45,7 +45,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const result = await deleteJobAction(id);
+    const result = await deleteJob(id);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 })
