@@ -11,8 +11,7 @@ export async function requireAuth() {
   const session = await getCurrentSession();
 
   if (!session) {
-    console.log("Erro ao Autenticar usuário");
-    throw new Error("Não autenticado.").message;
+    throw new Error("Não autenticado.");
   }
 
   return session;
