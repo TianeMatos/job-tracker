@@ -1,6 +1,6 @@
 import z from "zod";
 import { jobSchema } from "./job";
-import { applicationDetailsSchema, applicationStatusSchema } from "./application";
+import { applicationDetailsSchema, applicationStatusEnum } from "./application";
 
 const jobNotAppliedSchema = z.object({
   ...jobSchema.shape,
@@ -12,8 +12,8 @@ const jobAppliedSchema = z.object({
   ...jobSchema.shape,
   hasApplied: z.literal(true),
   application: applicationDetailsSchema.extend({
-    status: applicationStatusSchema
-  }),
+    status: applicationStatusEnum.optional().default("APPLIED")
+  }).optional(),
 });
 
 export const createJobFormSchema = z.discriminatedUnion("hasApplied", [jobNotAppliedSchema, jobAppliedSchema]);

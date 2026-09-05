@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 import {
   applicationDetailsSchema,
   applicationIdSchema,
-  applicationStatusSchema,
+  applicationStatusEnum,
 } from "@/schemas/application";
 import { jobIdSchema } from "@/schemas/job";
 import { revalidatePath } from "next/cache";
@@ -26,9 +26,11 @@ export async function applyToJob(jobId: string) {
       where: { id: idValidation.data, userId: session.user.id },
       include: { application: true },
     });
+    
     if (!job) {
       return { success: false, error: "Vaga não encontrada." };
     }
+
     if (job.application) {
       return {
         success: false,
@@ -41,6 +43,11 @@ export async function applyToJob(jobId: string) {
         userId: session.user.id,
         jobId: job.id,
         status: "APPLIED",
+        statusHistory: { 
+          create: {
+            status: "APPLIED"
+          } 
+        }
       },
       include: { job: true, notes: true },
     });
@@ -83,7 +90,7 @@ export async function getApplications() {
     const session = await requireAuth();
 
     const applications = await prisma.application.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, status: { not: "WITHDRAWN" } },
       include: { job: true, notes: true },
     });
 
@@ -145,7 +152,7 @@ export async function updateApplicationStatus(id: string, input: unknown) {
     return { success: false, error: z.prettifyError(idValidation.error) };
   }
 
-  const dataValidation = applicationStatusSchema.safeParse(input);
+  const dataValidation = applicationStatusEnum.safeParse(input);
   if (!dataValidation.success) {
     return { success: false, error: z.prettifyError(dataValidation.error) };
   }
@@ -155,7 +162,14 @@ export async function updateApplicationStatus(id: string, input: unknown) {
 
     const application = await prisma.application.update({
       where: { id: idValidation.data, userId: session.user.id },
-      data: { status: dataValidation.data },
+      data: { 
+        status: dataValidation.data,
+        statusHistory: {
+          create: {
+            status: dataValidation.data
+          }
+        }
+      },
       include: { job: true, notes: true },
     });
 
