@@ -9,12 +9,13 @@ import {
 import prisma from "@/lib/prisma";
 
 export async function getDashboardMetrics() {
-  const session = await requireAuth();
-
+  
   const aWeekAgo = new Date();
   aWeekAgo.setDate(aWeekAgo.getDate() - 7);
-
+  
   try {
+    const session = await requireAuth();
+
     const [
       savedJobs,
       activeApplications,
@@ -57,7 +58,7 @@ export async function getDashboardMetrics() {
         completedApplications,
         interviewRate:
           totalApplications > 0
-            ? (advancedToInterview / totalApplications) * 100
+            ? Math.floor((advancedToInterview / totalApplications) * 100)
             : 0,
         applicationsThisWeek,
         totalOffers,
