@@ -27,6 +27,7 @@ export async function createJob(input: unknown) {
               application: {
                 create: {
                   userId: session.user.id,
+                  statusHistory: { create: { status: application.status } },
                   ...application,
                 },
               },
@@ -88,18 +89,13 @@ export async function getJobById(id: string) {
 
     const job = await prisma.job.findUnique({
       where: { id: idValidation.data, userId: session.user.id },
-      include: { application: true },
+      include: { application: { include: { notes: true } } },
     });
+
+    if (!job) return { success: false, error: "Vaga não encontrada." };
 
     return { success: true, job };
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return { success: false, error: "Vaga não encontrada." };
-    }
-
     if (error instanceof Error && error.message === "Não autenticado.") {
       return { success: false, error: error.message };
     }
@@ -127,7 +123,7 @@ export async function updateJob(id: string, input: unknown) {
 
     const job = await prisma.job.update({
       where: { id: idValidation.data, userId: session.user.id },
-      data: dataValidation.data,
+      data: { ...dataValidation.data },
       include: { application: true },
     });
 
