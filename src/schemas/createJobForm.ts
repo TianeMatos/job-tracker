@@ -13,7 +13,7 @@ const jobAppliedSchema = z.object({
   hasApplied: z.literal(true),
   application: applicationDetailsSchema.extend({
     status: applicationStatusEnum.optional().default("APPLIED")
-  }).optional(),
+  }),
 });
 
 export const createJobFormSchema = z.discriminatedUnion("hasApplied", [jobNotAppliedSchema, jobAppliedSchema]);

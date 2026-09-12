@@ -1,5 +1,6 @@
 "use server";
 
+import { runAction } from "@/lib/action-helpers";
 import { requireAuth } from "@/lib/auth-session";
 import {
   ACTIVE_STATUSES,
@@ -9,17 +10,16 @@ import {
 import prisma from "@/lib/prisma";
 
 export async function getDashboardMetrics() {
-  
   const aWeekAgo = new Date();
   aWeekAgo.setDate(aWeekAgo.getDate() - 7);
   
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
     const [
       savedJobs,
       activeApplications,
-      completedApplications,
+      closedApplications,
       totalApplications,
       advancedToInterview,
       applicationsThisWeek,
@@ -51,11 +51,10 @@ export async function getDashboardMetrics() {
     ]);
 
     return {
-      success: true,
       metrics: {
         savedJobs,
         activeApplications,
-        completedApplications,
+        closedApplications,
         interviewRate:
           totalApplications > 0
             ? Math.floor((advancedToInterview / totalApplications) * 100)
@@ -65,14 +64,5 @@ export async function getDashboardMetrics() {
         totalRejected,
       },
     };
-  } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-    
-    return {
-      success: false,
-      error: "Ocorreu um erro ao buscar as métricas. Tente novamente.",
-    };
-  }
+  });
 }
