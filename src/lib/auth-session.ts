@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { AuthError } from "./errors";
 
 export async function getCurrentSession() {
   return auth.api.getSession({
@@ -11,7 +12,7 @@ export async function requireAuth() {
   const session = await getCurrentSession();
 
   if (!session) {
-    throw new Error("Não autenticado.");
+    throw new AuthError();
   }
 
   return session;
