@@ -1,79 +1,49 @@
-"use server"
+"use server";
 
+import { runAction, validationError } from "@/lib/action-helpers";
 import { auth } from "@/lib/auth";
-import { SignInInput, signInSchema, SignUpInput, signUpSchema } from "@/schemas/auth";
-import { isAPIError } from "better-auth/api";
+import {
+  signInSchema,
+  signUpSchema,
+} from "@/schemas/auth";
 import { headers } from "next/headers";
-import z from "zod";
 
-export async function signUp(input: SignUpInput) {
+export async function signUp(input: unknown) {
   const dataValidation = signUpSchema.safeParse(input);
-  
-  if (!dataValidation.success) {
-    const prettyError = z.prettifyError(dataValidation.error);
-    return { success: false, error: prettyError }
-  }
-  
-  try {
-    await auth.api.signUpEmail({ 
-      body: { 
+  if (!dataValidation.success) return validationError(dataValidation.error);
+
+  return runAction(async () => {
+    await auth.api.signUpEmail({
+      body: {
         name: dataValidation.data.name,
         email: dataValidation.data.email,
-        password: dataValidation.data.password
+        password: dataValidation.data.password,
       },
       headers: await headers(),
     });
-
-    return { success: true, }
-  } catch (error) {
-    if (isAPIError(error)) {
-      return { success: false, error: error.message }
-    }
-    
-    console.error("Erro inesperado no signUpAction:", error)
-    return { success: false, error: "Erro ao cadastrar usuário. Tente novamente." }
-  }
+  });
 }
 
-export async function signIn(input: SignInInput) {
+export async function signIn(input: unknown) {
   const dataValidation = signInSchema.safeParse(input);
-  
-  if (!dataValidation.success) {
-    const prettyError = z.prettifyError(dataValidation.error);
-    return { success: false, error: prettyError }
-  }
-  
-  try {
-    await auth.api.signInEmail({ 
-      body: { 
+
+  if (!dataValidation.success) return validationError(dataValidation.error);
+
+  return runAction(async () => {
+    const result = await auth.api.signInEmail({
+      body: {
         email: dataValidation.data.email,
-        password: dataValidation.data.password
+        password: dataValidation.data.password,
       },
       headers: await headers(),
     });
 
-    return { success: true }
-  } catch (error) {
-    if (isAPIError(error)) {
-      return { success: false, error: error.message }
-    }
-    
-    console.error("Erro inesperado no signInAction:", error)
-    return { success: false, error: "Erro ao Fazer Login. Tente novamente." }
-  }
+    return result.user.name;
+  });
 }
 
 export async function signOut() {
-  try {
-    await auth.api.signOut({ headers: await headers(), });
-
-    return { success: true }
-  } catch (error) {
-    if (isAPIError(error)) {
-      return { success: false, error: error.message }
-    }
-    
-    console.error("Erro inesperado no signOutAction:", error)
-    return { success: false, error: "Erro ao Sair. Tente novamente." }
-  }
+  return runAction(async () => {
+    await auth.api.signOut({ headers: await headers() });
+  });
 }
