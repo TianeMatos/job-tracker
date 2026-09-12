@@ -1,21 +1,23 @@
 "use server";
 
-import { Prisma } from "@/generated/prisma/client";
+import {
+  runAction,
+  validationError,
+} from "@/lib/action-helpers";
 import { requireAuth } from "@/lib/auth-session";
 import prisma from "@/lib/prisma";
 import { createJobFormSchema } from "@/schemas/createJobForm";
 import { jobIdSchema, updateJobSchema } from "@/schemas/job";
+import { paginationInputSchema } from "@/schemas/pagination";
 import { revalidatePath } from "next/cache";
-import z from "zod";
 
 export async function createJob(input: unknown) {
   const dataValidation = createJobFormSchema.safeParse(input);
-  if (!dataValidation.success) {
-    return { success: false, error: z.prettifyError(dataValidation.error) };
-  }
+  if (!dataValidation.success) return validationError(dataValidation.error);
 
   const { application, hasApplied, ...jobData } = dataValidation.data;
-  try {
+
+  return runAction(async () => {
     const session = await requireAuth();
 
     const job = await prisma.job.create({
@@ -27,8 +29,8 @@ export async function createJob(input: unknown) {
               application: {
                 create: {
                   userId: session.user.id,
-                  statusHistory: { create: { status: application.status } },
                   ...application,
+                  statusHistory: { create: { status: application.status } },
                 },
               },
             }
@@ -41,129 +43,116 @@ export async function createJob(input: unknown) {
     revalidatePath("/jobs");
     revalidatePath("/dashboard");
 
-    return { success: true, job };
-  } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao salvar a vaga. Tente novamente.",
-    };
-  }
+    return job;
+  });
 }
 
-//* Usar no Dashboard / job list
-export async function getJobs() {
-  try {
+export async function getJobs(input: unknown) {
+  const paginationValidation = paginationInputSchema.safeParse(input);
+  if (!paginationValidation.success)
+    return validationError(paginationValidation.error);
+
+  const { page, limit } = paginationValidation.data;
+
+  return runAction(async () => {
     const session = await requireAuth();
 
-    const jobs = await prisma.job.findMany({
-      where: { userId: session.user.id },
-      include: { application: true },
-    });
+    const [jobs, total] = await Promise.all([
+      prisma.job.findMany({
+        where: { userId: session.user.id, application: { is: null } },
+        select: {
+          id: true,
+          company: true,
+          role: true,
+          location: true,
+          workplaceType: true,
+          employmentType: true,
+          salary: true,
+          deadline: true,
+          source: true,
+          createdAt: true,
+          application: {
+            select: {
+              id: true,
+              status: true,
+              appliedAt: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.job.count({
+        where: { userId: session.user.id, application: { is: null } },
+      }),
+    ]);
 
-    return { success: true, jobs };
-  } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
+    const totalPages = Math.ceil(total / limit);
     return {
-      success: false,
-      error: "Ocorreu um erro ao buscar as vagas. Tente novamente.",
-    };
-  }
+      jobs,
+      metaData: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages
+      }
+    } 
+  });
 }
 
-//* Usar no job details
 export async function getJobById(id: string) {
   const idValidation = jobIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
-    const job = await prisma.job.findUnique({
+    const job = await prisma.job.findUniqueOrThrow({
       where: { id: idValidation.data, userId: session.user.id },
       include: { application: { include: { notes: true } } },
     });
 
-    if (!job) return { success: false, error: "Vaga não encontrada." };
-
-    return { success: true, job };
-  } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao buscar uma vaga. Tente novamente.",
-    };
-  }
+    return job;
+  });
 }
 
 export async function updateJob(id: string, input: unknown) {
   const idValidation = jobIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
   const dataValidation = updateJobSchema.safeParse(input);
-  if (!dataValidation.success) {
-    return { success: false, error: z.prettifyError(dataValidation.error) };
-  }
+  if (!dataValidation.success) return validationError(dataValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
     const job = await prisma.job.update({
       where: { id: idValidation.data, userId: session.user.id },
-      data: { ...dataValidation.data },
+      data: dataValidation.data,
       include: { application: true },
     });
 
     revalidatePath("/jobs");
-    revalidatePath(`/jobs/${id}`);
+    revalidatePath(`/jobs/${job.id}`);
     revalidatePath("/saved-jobs");
     revalidatePath("/kanban");
+    revalidatePath("/dashboard");
 
-    return { success: true, job };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return { success: false, error: "Vaga não encontrada." };
-    }
-
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao editar uma vaga. Tente novamente.",
-    };
-  }
+    return job;
+  });
 }
 
 export async function deleteJob(id: string) {
   const idValidation = jobIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
     const job = await prisma.job.delete({
       where: { id: idValidation.data, userId: session.user.id },
-      include: { application: true },
     });
 
     revalidatePath("/jobs");
@@ -171,22 +160,6 @@ export async function deleteJob(id: string) {
     revalidatePath("/kanban");
     revalidatePath("/dashboard");
 
-    return { success: true, job };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return { success: false, error: "Vaga não encontrada." };
-    }
-
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao excluir uma vaga. Tente novamente.",
-    };
-  }
+    return job;
+  });
 }

@@ -1,7 +1,8 @@
 "use server";
 
-import { Prisma } from "@/generated/prisma/client";
+import { runAction, validationError } from "@/lib/action-helpers";
 import { requireAuth } from "@/lib/auth-session";
+import { BusinessError } from "@/lib/errors";
 import prisma from "@/lib/prisma";
 import {
   applicationDetailsSchema,
@@ -10,46 +11,34 @@ import {
 } from "@/schemas/application";
 import { jobIdSchema } from "@/schemas/job";
 import { revalidatePath } from "next/cache";
-import z from "zod";
 
 //* Create Application
 export async function applyToJob(jobId: string) {
   const idValidation = jobIdSchema.safeParse(jobId);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
-    const job = await prisma.job.findUnique({
+    const job = await prisma.job.findUniqueOrThrow({
       where: { id: idValidation.data, userId: session.user.id },
       include: { application: true },
     });
-    
-    if (!job) {
-      return { success: false, error: "Vaga não encontrada." };
-    }
 
-    if (job.application) {
-      return {
-        success: false,
-        error: "Você já se candidatou a esta vaga.",
-      };
-    }
+    if (job.application)
+      throw new BusinessError("Você já se candidatou a esta vaga.");
 
     const application = await prisma.application.create({
       data: {
         userId: session.user.id,
         jobId: job.id,
         status: "APPLIED",
-        statusHistory: { 
+        statusHistory: {
           create: {
-            status: "APPLIED"
-          } 
-        }
+            status: "APPLIED",
+          },
+        },
       },
-      include: { job: true, notes: true },
     });
 
     revalidatePath("/saved-jobs");
@@ -58,209 +47,157 @@ export async function applyToJob(jobId: string) {
     revalidatePath(`/jobs/${application.jobId}`);
     revalidatePath("/dashboard");
 
-    return {
-      success: true,
-      application,
-    };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return {
-        success: false,
-        error: "Você já se candidatou a esta vaga.",
-      };
-    }
-
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao registrar a candidatura. Tente novamente.",
-    };
-  }
+    return application;
+  });
 }
 
-//* Get All Applications -> Use on kanban
+//* Get All Applications
 export async function getApplications() {
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
     const applications = await prisma.application.findMany({
       where: { userId: session.user.id, status: { not: "WITHDRAWN" } },
-      include: { job: true, notes: true },
+      select: {
+        id: true,
+        status: true,
+        position: true,
+        appliedAt: true,
+        jobId: true,
+        // statusHistory: {
+        //   orderBy: {
+        //     createdAt: "asc",
+        //   },
+        // },
+
+        job: {
+          select: {
+            id: true,
+            company: true,
+            role: true,
+            location: true,
+            workplaceType: true,
+            employmentType: true,
+            salary: true,
+          },
+        },
+      },
+      orderBy: {
+        position: "asc",
+      },
+      take: 100,
     });
 
-    return {
-      success: true,
-      applications,
-    };
-  } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao buscar as candidaturas. Tente novamente.",
-    };
-  }
+    return applications;
+  });
 }
 
-//* Get One Application -> Use on update form
+//* Get One Application #Not Using
 export async function getApplicationById(id: string) {
   const idValidation = applicationIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
-    const application = await prisma.application.findUnique({
+    const application = await prisma.application.findUniqueOrThrow({
       where: { id: idValidation.data, userId: session.user.id },
-      include: { job: true, notes: true },
+      include: {
+        job: true,
+        notes: true,
+        statusHistory: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
     });
 
-    if (!application) {
-      return { success: false, error: "Candidatura não encontrada!" };
-    }
-
-    return {
-      success: true,
-      application,
-    };
-  } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao buscar um candidatura. Tente novamente.",
-    };
-  }
+    return application;
+  });
 }
 
 //* Update status -> input: status
 export async function updateApplicationStatus(id: string, input: unknown) {
   const idValidation = applicationIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
   const dataValidation = applicationStatusEnum.safeParse(input);
-  if (!dataValidation.success) {
-    return { success: false, error: z.prettifyError(dataValidation.error) };
-  }
+  if (!dataValidation.success) return validationError(dataValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
+
+    const current = await prisma.application.findUniqueOrThrow({
+      where: { id: idValidation.data, userId: session.user.id },
+      select: { status: true, jobId: true },
+    });
+
+    if (current.status === dataValidation.data) {
+      return prisma.application.findUniqueOrThrow({
+        where: { id: idValidation.data, userId: session.user.id },
+      });
+    }
 
     const application = await prisma.application.update({
       where: { id: idValidation.data, userId: session.user.id },
-      data: { 
+      data: {
         status: dataValidation.data,
-        statusHistory: {
-          create: {
-            status: dataValidation.data
-          }
-        }
+        statusHistory: { create: { status: dataValidation.data } },
       },
-      include: { job: true, notes: true },
     });
 
     revalidatePath("/kanban");
     revalidatePath("/dashboard");
     revalidatePath(`/jobs/${application.jobId}`);
 
-    return {
-      success: true,
-      application,
-    };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return { success: false, error: "Candidatura não encontrada!" };
-    }
-
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error:
-        "Ocorreu um erro ao alterar o status de uma candidatura. Tente novamente.",
-    };
-  }
+    return application;
+  });
 }
 
 //* Update other infos of application
 export async function updateApplicationDetails(id: string, input: unknown) {
   const idValidation = applicationIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
   const dataValidation = applicationDetailsSchema.safeParse(input);
-  if (!dataValidation.success) {
-    return { success: false, error: z.prettifyError(dataValidation.error) };
-  }
+  if (!dataValidation.success) return validationError(dataValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
     const application = await prisma.application.update({
       where: { id: idValidation.data, userId: session.user.id },
-      data: { ...dataValidation.data },
-      include: { job: true, notes: true },
+      data: dataValidation.data,
+      select: {
+        id: true,
+        jobId: true,
+        contactName: true,
+        contactEmail: true,
+        interviewDate: true,
+      },
     });
 
     revalidatePath(`/jobs/${application.jobId}`);
 
-    return {
-      success: true,
-      application,
-    };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return { success: false, error: "Candidatura não encontrada!" };
-    }
-
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error:
-        "Ocorreu um erro ao alterar os dados de uma candidatura. Tente novamente.",
-    };
-  }
+    return application;
+  });
 }
 
 //* Delete application
 export async function deleteApplication(id: string) {
   const idValidation = applicationIdSchema.safeParse(id);
-  if (!idValidation.success) {
-    return { success: false, error: z.prettifyError(idValidation.error) };
-  }
+  if (!idValidation.success) return validationError(idValidation.error);
 
-  try {
+  return runAction(async () => {
     const session = await requireAuth();
 
     const application = await prisma.application.delete({
       where: { id: idValidation.data, userId: session.user.id },
-      include: { job: true, notes: true },
+      select: {
+        id: true,
+        jobId: true,
+      },
     });
 
     revalidatePath("/kanban");
@@ -268,28 +205,6 @@ export async function deleteApplication(id: string) {
     revalidatePath(`/jobs/${application.jobId}`);
     revalidatePath("/dashboard");
 
-    return {
-      success: true,
-      application,
-    };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return {
-        success: false,
-        error: "Candidatura não encontrada!",
-      };
-    }
-
-    if (error instanceof Error && error.message === "Não autenticado.") {
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: false,
-      error: "Ocorreu um erro ao deletar uma candidatura. Tente novamente.",
-    };
-  }
+    return application;
+  });
 }
