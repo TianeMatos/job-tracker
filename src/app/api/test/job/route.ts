@@ -1,8 +1,8 @@
 import { createJob, getJobs } from "@/actions/job";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 //* POST Create a Job / Job + Application
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
@@ -20,20 +20,30 @@ export async function POST(request: Request) {
   }
 }
 
-//* GET all Jobs
-export async function GET() {
+//* GET all Jobs (com suporte a paginação)
+export async function GET(request: NextRequest) {
   try {
-    const result = await getJobs();
+    // Extrai os query params 'page' e 'limit' da URL (ex: /api/jobs?page=1&limit=10)
+    const { searchParams } = new URL(request.url);
+    const page = searchParams.get("page");
+    const limit = searchParams.get("limit");
+
+    const result = await getJobs({
+      ...(page && { page: Number(page) }),
+      ...(limit && { limit: Number(limit) }),
+    });
 
     if (!result.success) {
-      return NextResponse.json(result, { status: 400 })
+      return NextResponse.json(result);
     }
 
-    return NextResponse.json(result, { status: 201 })
+    // Retorna 200 OK para leitura de dados
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
+    console.error("Erro inesperado no GET /api/jobs:", error);
     return NextResponse.json(
-      { success: false, error },
+      { success: false, error: "Erro interno no servidor ao buscar vagas." },
       { status: 500 }
-    )
+    );
   }
 }
