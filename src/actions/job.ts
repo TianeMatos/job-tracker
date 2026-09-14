@@ -20,6 +20,13 @@ export async function createJob(input: unknown) {
   return runAction(async () => {
     const session = await requireAuth();
 
+    const positionAtEnd =
+      hasApplied && application
+        ? await prisma.application.count({
+            where: { userId: session.user.id, status: application.status },
+          })
+        : 0;
+
     const job = await prisma.job.create({
       data: {
         userId: session.user.id,
@@ -29,6 +36,7 @@ export async function createJob(input: unknown) {
               application: {
                 create: {
                   userId: session.user.id,
+                  position: positionAtEnd,
                   ...application,
                   statusHistory: { create: { status: application.status } },
                 },
