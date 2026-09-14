@@ -28,11 +28,16 @@ export async function applyToJob(jobId: string) {
     if (job.application)
       throw new BusinessError("Você já se candidatou a esta vaga.");
 
+    const positionAtEnd = await prisma.application.count({
+      where: { userId: session.user.id, status: "APPLIED" },
+    });
+
     const application = await prisma.application.create({
       data: {
         userId: session.user.id,
         jobId: job.id,
         status: "APPLIED",
+        position: positionAtEnd,
         statusHistory: {
           create: {
             status: "APPLIED",
@@ -82,9 +87,7 @@ export async function getApplications() {
           },
         },
       },
-      orderBy: {
-        position: "asc",
-      },
+      orderBy: [{ status: "asc" }, { position: "asc" }],
       take: 100,
     });
 
@@ -130,21 +133,40 @@ export async function updateApplicationStatus(id: string, input: unknown) {
 
     const current = await prisma.application.findUniqueOrThrow({
       where: { id: idValidation.data, userId: session.user.id },
-      select: { status: true, jobId: true },
+      select: { status: true, position: true, jobId: true },
     });
 
     if (current.status === dataValidation.data) {
       return prisma.application.findUniqueOrThrow({
         where: { id: idValidation.data, userId: session.user.id },
+        select: { status: true, position: true, jobId: true },
       });
     }
 
-    const application = await prisma.application.update({
-      where: { id: idValidation.data, userId: session.user.id },
-      data: {
-        status: dataValidation.data,
-        statusHistory: { create: { status: dataValidation.data } },
-      },
+    const application = await prisma.$transaction(async (tx) => {
+
+      await tx.application.updateMany({
+        where: {
+          userId: session.user.id,
+          status: current.status,
+          position: { gt: current.position },
+        },
+        data: { position: { decrement: 1 } },
+      });
+
+      const positionAtEnd = await tx.application.count({
+        where: { userId: session.user.id, status: dataValidation.data },
+      });
+
+      return tx.application.update({
+        where: { id: idValidation.data, userId: session.user.id },
+        data: {
+          status: dataValidation.data,
+          position: positionAtEnd,
+          statusHistory: { create: { status: dataValidation.data } },
+        },
+        select: { status: true, position: true, jobId: true },
+      });
     });
 
     revalidatePath("/kanban");

@@ -25,7 +25,10 @@ export const applicationDetailsSchema = z.object({
     .optional(),
   interviewDate: z.coerce.date().optional(),
 });
-//* ⬆️ .strict() -> fará o Zod retornar erro se receber algo diferente do tem no schema
+
+export const reorderApplicationSchema = z.object({
+  position: z.number().int().min(0),
+});
 
 export const applicationIdSchema = z.uuid({
   error: "ID da candidatura inválido.",
