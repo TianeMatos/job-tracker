@@ -206,7 +206,58 @@ Este documento registra a suíte de testes manuais executada via rotas HTTP (Pos
 
 ---
 
-## 5. Dashboard de Métricas (RF-08)
+## 5. Reordenação no Kanban (RF-13 — Drag & Drop Completo)
+
+- Pré-condição sugerida: popular uma coluna (ex.: APPLIED) com 4 candidaturas do mesmo usuário, em posições conhecidas 0, 1, 2, 3 (W, Y, Z, D, respectivamente), para poder conferir o deslocamento exato após cada chamada.
+
+- [✅] **TC-APP-13: Reordenar Para Frente na Mesma Coluna**
+  -  **Ação:** reorderApplication(D.id, { position: 3 }), com D originalmente em position: 1.
+  - **Esperado:** Cards nas posições 2 e 3 (Z, D originalmente) recuam uma casa (decrement); D passa a ter position: 3; card na posição 0 (W) permanece intocado.
+  - **Status:** Sucesso
+
+- [✅] **TC-APP-14: Reordenar Para Trás na Mesma Coluna**
+  - **Ação:** reorderApplication(D.id, { position: 1 }), com D originalmente em position: 3.
+  - **Esperado:** Cards nas posições 1 e 2 (Y, Z) avançam uma casa (increment); D passa a ter position: 1.
+  - **Status:** Sucesso
+ 
+- [✅] **TC-APP-15: Reordenar para a Mesma Posição (Idempotência)**
+  - **Ação:** reorderApplication(D.id, { position: current.position }), ou seja, sem mudança real.
+  - **Esperado:** Nenhum updateMany desloca outros cards; retorno tem o mesmo shape (Application & { job, notes }) que os demais caminhos, sem chamar a transação de deslocamento.
+  - **Status:** Sucesso
+ 
+- [✅] **TC-APP-16: Posição Inválida**
+  - **Ação:** reorderApplication(id, { position: -1 }).
+  - **Esperado:** success: false, error.code: 400 — rejeitado pelo reorderApplicationSchema (min(0)) antes de chegar ao banco.
+  - **Status:** Sucesso
+
+- [✅] **TC-APP-17: Isolamento por Usuário na Reordenação**
+  - **Ação:** Usuário 'A' chama reorderApplication em uma candidatura sua, enquanto o Usuário 'B' possui candidaturas no mesmo status (ex.: ambos têm cards em APPLIED).
+  - **Esperado:** O updateMany de deslocamento filtra por userId — nenhuma candidatura do Usuário 'B' tem sua position alterada pela reordenação de 'A', mesmo compartilhando o mesmo status globalmente.
+  - **Status:** Sucesso
+
+- [✅] **TC-APP-18: Ordenação Reflete a Posição Persistida**
+  - **Ação:** Após qualquer reordenação bem-sucedida, chamar getApplications().
+  - **Esperado:** A lista retornada respeita orderBy: [{ status: "asc" }, { position: "asc" }] — a ordem visual do Kanban bate com a última reordenação salva.
+  - **Status:** Sucesso
+
+- [✅] **TC-APP-19: Múltiplas Candidaturas Entrando na Mesma Coluna via Caminhos Diferentes**
+  - **Ação:** Criar uma candidatura via applyToJob, depois outra via createJob({ hasApplied: true, ... }), ambas caindo em status: "APPLIED".
+  - **Esperado:** A segunda recebe position: 1 (não 0), sem colidir com a primeira.
+  - **Status:** Sucesso
+
+- [✅] **TC-APP-20: Buraco na Coluna de Origem Não Causa Colisão de Posição**
+  - **Ação:** Criar 3 candidaturas em APPLIED (posições 0,1,2) → mover a do meio (posição 1) para INTERVIEWING → chamar applyToJob numa vaga nova, caindo em APPLIED.
+  - **Esperado:** Nenhuma colisão de position em APPLIED; a nova candidatura entra exatamente na posição que ficou vaga (ou no fim compacto da sequência), sem duplicar position com nenhum card existente.
+  - **Status:** Sucesso
+
+- [✅] **TC-APP-21: Usuário não pode Reordenar Application de outro Usuário**
+  - **Ação:** Usuário A tenta  reordenar uma aplicação do usuário B, `reorderApplication(id_da_application_de_B, ...)`
+  - **Esperado:** Erro - `success: false`, `"Registro não encontrado."`
+  - **Status:** Sucesso
+
+---
+
+## 6. Dashboard de Métricas (RF-08)
 
 - [✅] **TC-DASH-01: Contagem de Vagas Salvas**
   - **Esperado:** `savedJobs` reflete exatamente as `Job` com `application: null`, sem contar as já convertidas.
@@ -243,8 +294,9 @@ Este documento registra a suíte de testes manuais executada via rotas HTTP (Pos
 
 ## 📊 Resumo das Execuções
 
-* **Total de Cenários:** 44
-* **Passou (PASS):** 44
-* **Falhou (FAIL):** 1 (Encontrado e corrigido durante a execução)
+* **Total de Cenários:** 53
+* **Passou (PASS):** 52
+* **Falhas Encontradas Durante a Execução:** 1
+* **Falhas Corrigidas:** 1
 * **Pendente:** 0
-* **Última Execução:** 12/09/2026
+* **Última Execução:** 14/09/2026
