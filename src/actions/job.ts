@@ -4,7 +4,7 @@ import {
   runAction,
   validationError,
 } from "@/lib/action-helpers";
-import { requireAuth } from "@/lib/auth-session";
+import { requireAuth } from "@/lib/auth/auth-session";
 import prisma from "@/lib/prisma";
 import { createJobFormSchema } from "@/schemas/createJobForm";
 import { jobIdSchema, updateJobSchema } from "@/schemas/job";

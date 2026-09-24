@@ -1,7 +1,7 @@
 "use server";
 
 import { runAction, validationError } from "@/lib/action-helpers";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import {
   signInSchema,
   signUpSchema,

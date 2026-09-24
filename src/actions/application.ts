@@ -1,7 +1,7 @@
 "use server";
 
 import { runAction, validationError } from "@/lib/action-helpers";
-import { requireAuth } from "@/lib/auth-session";
+import { requireAuth } from "@/lib/auth/auth-session";
 import { BusinessError } from "@/lib/errors";
 import prisma from "@/lib/prisma";
 import {
