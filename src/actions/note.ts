@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAuth } from "@/lib/auth-session";
+import { requireAuth } from "@/lib/auth/auth-session";
 import prisma from "@/lib/prisma";
 import { noteIdSchema, noteSchema } from "@/schemas/note";
 import { applicationIdSchema } from "@/schemas/application";
