@@ -27,7 +27,6 @@ import { SidebarUser } from "@/lib/types/dashboard";
 import { Button } from "../ui/button";
 import { signOut } from "@/actions/auth";
 import { useTransition } from "react";
-import { toast } from "../ui/toast";
 
 function getInitials(name: string): string {
   return name
@@ -80,13 +79,8 @@ export default function AppSidebar({ user }: { user: SidebarUser }) {
   const signOutTransition = () => {
     startTransition(async () => {
       await signOut();
-
-      toast.add({
-        type: "success",
-        description: "Você saiu da sua conta com sucesso.",
-        timeout: 7000,
-      });
       router.push("/login");
+      router.refresh();
     }); 
   };
 
@@ -109,8 +103,8 @@ export default function AppSidebar({ user }: { user: SidebarUser }) {
       <SidebarHeader>
         <LogoMark
           showText
-          sizeText="text-[26px]"
-          size={42}
+          sizeText="text-[27px]"
+          size={43}
           className="text-primary-foreground"
         />
       </SidebarHeader>
@@ -130,7 +124,7 @@ export default function AppSidebar({ user }: { user: SidebarUser }) {
                         tooltip={item.shortLabel}
                         render={<Link href={item.id} />}
                         aria-current={isActive(item.id) ? "page" : undefined}
-                        className={`h-11 px-3 my-0.5 font-medium transition-all ${isActive(item.id) ? "inset-shadow cursor-default pointer-events-none" : "text-muted/80 bg-transparent hover:text-muted hover:bg-primary/90"}`}
+                        className={`h-11 px-3 my-0.5 font-medium transition-all ${isActive(item.id) ? "inset-shadow cursor-default pointer-events-none" : "text-muted/80 bg-transparent hover:text-muted hover:scale-105 hover:bg-primary/90"}`}
                       >
                         <item.icon aria-hidden="true" />
                         <span>{item.label}</span>
