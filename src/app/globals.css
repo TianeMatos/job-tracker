@@ -1,26 +1,181 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.625rem;
+
+  /* base */
+  --background: #F6F7F9;   /* paper-50 */
+  --foreground: #17192b;  /* ink-700 */
+
+  --card: #FFFFFF;
+  --card-foreground: #17192b;
+
+  /* primary = único accent funcional/interativo (indigo) */
+  --primary: #5b4fe5;   
+  --primary-foreground: #F7F8FD;
+
+  /* secondary = navy, painel de marca e superfícies escuras */
+  --secondary: #0b0b1e;  /*ink-900 ou #1B2340 0f0f1a */
+  --secondary-foreground: #FFFDF9;
+
+  /* destructive = erro de validação */
+  --destructive: #B3261E;  /* error-600 */
+  --destructive-foreground: #FFFDF9;
+
+  /* neutros de UI */
+  --muted: #F5F3EE;
+  --muted-foreground: #9A9EAE;
+  --accent: #E7EAFC;        
+  --accent-foreground: #1F214A;
+  --border: #1B234026;
+  --input: #1B234026;
+  --ring: #5B4FE5;        
+
+  --popover: #FFFDF9;
+  --popover-foreground: #2B2F3A;
+
+  --brand-gold: #C99A3D;      
+
+  --status-applied: #3d84fa;
+  --status-in_review: #db9f00;
+  --status-interviewing: #9b5ce4;
+  --status-technical_test: #e67339;
+  --status-proposal: #29b159;
+  --status-rejected: #e64343;
+  --status-withdrawn: #757575;
+  --status-hired: #009780;
+
+  --sidebar: #0b0b1e;
+  --sidebar-foreground: #FFFDF9;
+  --sidebar-primary: #5B4FE5;
+  --sidebar-primary-foreground: #F7F8FD;
+  --sidebar-accent: #1F214A;
+  --sidebar-accent-foreground: #E7EAFC;
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: #5B4FE5;
+  --sidebar-width: 12rem
+  
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-brand-gold: var(--brand-gold);
+
+  --color-status-applied: var(--status-applied);
+  --color-status-in_review: var(--status-in_review);
+  --color-status-interviewing: var(--status-interviewing);
+  --color-status-technical_test: var(--status-technical_test);
+  --color-status-proposal: var(--status-proposal);
+  --color-status-rejected: var(--status-rejected);
+  --color-status-withdrawn: var(--status-withdrawn);
+  --color-status-hired: var(--status-hired);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --sidebar-width: var(--sidebar-width);
+
+  --radius-xl: calc(var(--radius) + 2);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+
+  --inset-shadow: inset 4px 0 0 var(--ring);
+  --shadow-card: 0 1px 2px #0c0d200a, 0 7px 24px #0C0D200A;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
 }
+
+@utility focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+}
+
+
+/* 
+--radius: 0.75rem;
+  --background: oklch(0.975 0.003 275);
+  --foreground: oklch(0.22 0.035 278);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.035 278);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.58 0.23 278);
+  --primary-foreground: oklch(0.99 0.005 275);
+  --brand-gold: oklch(0.714 0.122 81.4);
+  --brand-gold-foreground: oklch(0.22 0.04 281);
+  --secondary: oklch(0.95 0.012 278);
+  --secondary-foreground: oklch(0.28 0.05 278);
+  --muted: oklch(0.96 0.006 275);
+  --muted-foreground: oklch(0.53 0.025 275);
+  --accent: oklch(0.94 0.025 278);
+  --accent-foreground: oklch(0.49 0.19 278);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.9 0.01 275);
+  --input: oklch(0.9 0.01 275);
+  --ring: oklch(0.58 0.23 278);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.16 0.04 281);
+  --sidebar-foreground: oklch(0.98 0.006 275);
+  --sidebar-primary: oklch(0.62 0.23 278);
+  --sidebar-primary-foreground: oklch(0.99 0.005 275);
+  --sidebar-accent: oklch(0.27 0.075 278);
+  --sidebar-accent-foreground: oklch(0.98 0.006 275);
+  --sidebar-border: oklch(0.28 0.035 280);
+  --sidebar-ring: oklch(0.62 0.23 278);
+  --sidebar-muted: oklch(0.7 0.025 275);
+  --overlay: oklch(0.08 0.02 280 / 62%);
+  --status-applied: oklch(0.63 0.19 260);
+  --status-review: oklch(0.74 0.16 83);
+  --status-interview: oklch(0.61 0.2 302);
+  --status-test: oklch(0.68 0.16 45);
+  --status-offer: oklch(0.67 0.17 150);
+  --status-rejected: oklch(0.62 0.2 25);
+  --status-hired: oklch(0.59 0.14 180);
+  --shadow-card: 0 1px 2px oklch(0.17 0.04 280 / 4%), 0 7px 24px oklch(0.17 0.04 280 / 4%);
+  --shadow-brand: 0 8px 20px oklch(0.58 0.23 278 / 30%);
+  --shadow-sidebar-inset: inset 3px 0 0 var(--primary);
+*/

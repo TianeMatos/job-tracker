@@ -36,6 +36,10 @@ export const applicationIdSchema = z.uuid({
 
 export const applyToJobSchema = applicationDetailsSchema;
 
+export type ApplicationStatus = z.infer<
+  typeof applicationStatusEnum
+>;
+
 export type UpdateApplicationStatusInput = z.infer<
   typeof updateApplicationStatusSchema
 >;
