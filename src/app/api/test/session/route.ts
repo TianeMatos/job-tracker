@@ -19,7 +19,7 @@
 //   });
 // }
 
-import { requireAuth } from "@/lib/auth-session";
+import { requireAuth } from "@/lib/auth/auth-session";
 
 export async function GET() {
   try {
