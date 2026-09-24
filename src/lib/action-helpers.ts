@@ -14,9 +14,9 @@ export type PaginatedResult<T> = {
   };
 };
 
-type ActionError = { message: string; code?: number };
+export type ActionError = { message: string; code?: number };
 
-type ActionResult<T> =
+export type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: ActionError };
 
