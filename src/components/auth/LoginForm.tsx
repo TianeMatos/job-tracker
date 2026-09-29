@@ -7,13 +7,13 @@ import { Button } from "../ui/button";
 import { EyeOff, Eye, Loader2, AlertCircleIcon } from "lucide-react";
 import { signIn } from "@/actions/auth";
 import { useRouter } from "next/navigation";
+import { toast } from "../ui/toast";
 
 export default function LoginForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false)
-
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,6 +30,11 @@ export default function LoginForm() {
         return;
       }
 
+      toast.add({
+        type: "success",
+        description: "Login Feito com Sucesso.",
+        timeout: 7000,
+      });
       router.push("/dashboard");
     });
   }
@@ -84,7 +89,7 @@ export default function LoginForm() {
           className="flex gap-1 items-center text-sm text-destructive bg-destructive/10 rounded-sm p-2"
         >
           <AlertCircleIcon className="size-4 mx-1" />
-          <span>{error.split("\n")[0].split("✖")[1]}</span>
+          <span>{error}</span>
         </div>
       )}
 

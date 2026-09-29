@@ -27,6 +27,7 @@ import { SidebarUser } from "@/lib/types/dashboard";
 import { Button } from "../ui/button";
 import { signOut } from "@/actions/auth";
 import { useTransition } from "react";
+import { toast } from "../ui/toast";
 
 function getInitials(name: string): string {
   return name
@@ -79,8 +80,13 @@ export default function AppSidebar({ user }: { user: SidebarUser }) {
   const signOutTransition = () => {
     startTransition(async () => {
       await signOut();
+
+      toast.add({
+        type: "success",
+        description: "Você saiu da sua conta com sucesso.",
+        timeout: 7000,
+      });
       router.push("/login");
-      router.refresh();
     }); 
   };
 

@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import { EyeOff, Eye, Loader2, AlertCircleIcon } from "lucide-react";
 import { signUp } from "@/actions/auth";
 import { useRouter } from "next/navigation";
+import { toast } from "../ui/toast";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -30,6 +31,11 @@ export default function RegisterForm() {
         return;
       }
 
+      toast.add({
+        type: "success",
+        description: "Cadastro Feito com Sucesso.",
+        timeout: 7000,
+      });
       router.push("/dashboard");
     });
   }

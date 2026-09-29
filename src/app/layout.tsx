@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/toast";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const plexSans = IBM_Plex_Sans({subsets:['latin'], variable:'--font-plex-sans'});
+const fraunces = Fraunces({subsets:['latin'], variable:'--font-fraunces'});
 
 export const metadata: Metadata = {
   title: "JobTracker",
@@ -14,10 +16,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
-      suppressHydrationWarning // Retirar erro de hydratação
-      className={cn("h-full", inter.variable)}
+      suppressHydrationWarning
+      className={cn("h-full", fraunces.variable, plexSans.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Toaster  />
+      </body>
     </html>
   );
 }
