@@ -20,11 +20,11 @@ export default function RecentApplications({
 }) {
   return (
     <Card className="rounded-2xl border border-border bg-card shadow-card gap-0 last:pb-0">
-      <CardHeader className="grid grid-cols-2 grid-rows-2 border-b border-b-border">
-        <CardTitle className="text-base font-bold text-secondary">
+      <CardHeader className="grid grid-cols-2 grid-rows-2 gap-x-3 border-b border-b-border">
+        <CardTitle className="text-base font-bold text-secondary tracking-tight">
           Candidaturas Recentes
         </CardTitle>
-        <CardDescription className="col-span-2 mt-1 text-xs text-foreground/65 sm:text-sm">
+        <CardDescription className="col-span-1 mt-1 text-xs text-foreground/65 sm:text-sm">
           Últimas Movimentações Registradas
         </CardDescription>
         <CardAction>
@@ -65,7 +65,7 @@ export default function RecentApplications({
                 </div>
                 <Badge
                   variant={"default"}
-                  className={`justify-self-start col-start-2 row-start-2 max-w-full sm:col-start-auto sm:row-start-auto sm:justify-self-end ${status.badgeClassName} `}
+                  className={`p-2.5 justify-self-start col-start-2 row-start-2 max-w-full truncate sm:col-start-auto sm:row-start-auto sm:justify-self-end ${status.badgeClassName} `}
                 >
                   {status.label}
                 </Badge>

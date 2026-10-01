@@ -40,7 +40,7 @@ export default function ApplicationStatusChart({
     <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6 overflow-hidden">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-bold text-secondary">
+          <h2 className="text-base font-bold text-secondary tracking-tight">
             Progresso das Candidaturas
           </h2>
           <p className="mt-1 text-xs text-foreground/65 sm:text-sm">
@@ -53,7 +53,7 @@ export default function ApplicationStatusChart({
         <>
           <ChartContainer
             config={chartConfig}
-            className="mt-4 w-full sm:min-w-sm h-50 sm:h-55 text-[10px] sm:text-xs"
+            className="mt-4 w-full text-[11px] aspect-2/1 sm:aspect-5/2 sm:min-w-sm h-50 sm:h-55 sm:text-xs"
           >
             <table className="sr-only">
               <caption>Distribuição de Candidaturas por Etapa</caption>
@@ -75,7 +75,7 @@ export default function ApplicationStatusChart({
             <BarChart
               accessibilityLayer
               data={data}
-              margin={{ top: 16, left: 10, right: 12, bottom: 16 }}
+              margin={{ top: 20, left: 0, right: 10, bottom: 25 }}
             >
               <XAxis
                 dataKey="label"
@@ -89,7 +89,7 @@ export default function ApplicationStatusChart({
               />
               <YAxis hide />
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={36}>
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={36} animationDuration={300}>
                 <LabelList
                   position="top"
                   className="text-xs fill-secondary font-semibold"
@@ -97,13 +97,13 @@ export default function ApplicationStatusChart({
               </Bar>
             </BarChart>
           </ChartContainer>
-          <p className="mt-6 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-8 text-xs sm:text-sm leading-relaxed text-muted-foreground">
             Veja como suas candidaturas estão distribuídas entre as etapas do
             processo.
           </p>
         </>
       ) : (
-        <p className="mt-6 py-10 text-center text-sm text-muted-foreground">
+        <p className="mt-8 py-10 text-center text-sm text-muted-foreground">
           Você ainda não tem candidaturas registradas.
         </p>
       )}
