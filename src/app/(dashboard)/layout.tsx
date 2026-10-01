@@ -14,6 +14,7 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   const session = await requireAuth();
+  
   return (
     <SidebarProvider className="h-screen overflow-hidden">
       <AppSidebar user={session.user} />
