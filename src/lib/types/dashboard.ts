@@ -9,13 +9,14 @@ export type Metric = {
   icon: LucideIcon;
   iconColor: string;
   iconBg: string;
-  iconFilled?: boolean
+  iconFilled?: boolean;
 };
 
 export type Summary = {
   label: string;
   value: string | number;
   icon: LucideIcon;
+  color: string;
 };
 
 export type Application = {
