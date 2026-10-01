@@ -1,4 +1,3 @@
-import { Bookmark } from "lucide-react";
 import {
   Card,
   CardAction,
@@ -15,7 +14,7 @@ export default function MetricCard({
   item: Metric;
 }) {
   return (
-    <Card className="rounded-2xl p-5 border border-border bg-card shadow-card xl:p-6">
+    <Card className="rounded-2xl place-content-between p-5 border border-border bg-card shadow-card xl:p-6">
       <CardHeader className="p-0">
         <CardTitle className="text-base font-medium text-foreground/65 leading-tight tracking-tight">
           {item.label}

@@ -3,10 +3,11 @@ import {
   getRecentApplications,
 } from "@/actions/dashboardMetrics";
 import ApplicationStatusChart from "@/components/dashboard/ApplicationStatusChart";
-import DashboardSummary from "@/components/dashboard/DashboardSummary";
+import SummaryCard from "@/components/dashboard/SummaryCard";
 import MetricCard from "@/components/dashboard/MetricCard";
 import RecentApplications from "@/components/dashboard/RecentApplications";
 import { buttonVariants } from "@/components/ui/button";
+import { unwrapAction } from "@/lib/action-helpers";
 import { requireAuth } from "@/lib/auth/auth-session";
 import { Metric, Summary } from "@/lib/types/dashboard";
 import {
@@ -31,24 +32,11 @@ function formatInterviewCountdown(days: number | null) {
 export default async function DashboardPage() {
   const [session, metricsResult, recentResult] = await Promise.all([
     requireAuth(),
-    getDashboardMetrics(),
-    getRecentApplications(),
+    getDashboardMetrics().then(unwrapAction),
+    getRecentApplications().then(unwrapAction),
   ]);
-  if (!metricsResult.success || !recentResult.success) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h2 className="text-lg font-semibold">
-          Não foi possível carregar o dashboard
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Tente novamente em alguns instantes.
-        </p>
-      </div>
-    );
-  }
-
-  const { metrics, statusDistribution } = metricsResult.data;
-  const { applications } = recentResult.data;
+  const { metrics, statusDistribution } = metricsResult;
+  const { applications } = recentResult;
 
   const firstName = session.user.name.trim().split(/\s+/)[0];
 
@@ -60,7 +48,7 @@ export default async function DashboardPage() {
       icon: Bookmark,
       iconBg: "#5b4fe518",
       iconColor: "#4f46e5",
-      iconFilled: true
+      iconFilled: true,
     },
     {
       label: "Candidaturas Ativas",
@@ -93,27 +81,31 @@ export default async function DashboardPage() {
       label: "Candidaturas esta Semana",
       value: String(metrics.applicationsThisWeek),
       icon: FileText,
+      color: "var(--status-applied)"
     },
     {
       label: "Entrevistas",
       value: String(metrics.interviewingCount),
       icon: Users,
+      color: "var(--status-interviewing)"
     },
     {
       label: "Proposta(s)",
       value: String(metrics.totalOffers),
       icon: CheckCircle2,
+      color: "var(--status-proposal)",
     },
     {
       label: "Desistência(s)",
       value: String(metrics.withdrawnApplications),
       icon: FileXCorner,
+      color: "var(--status-withdrawn)"
     },
   ];
 
   return (
     <div>
-      <div className="mb-7 flex flex-wrap gap-5 justify-between items-center">
+      <div className="mb-7 grid grid-cols-1 gap-5 place-content-between items-center sm:grid-cols-[1fr_190px]">
         <div className="flex flex-col gap-3 sm:items-start sm:justify-between">
           <p className="text-xs text-primary font-semibold uppercase tracking-widest">
             Visão geral
@@ -140,7 +132,7 @@ export default async function DashboardPage() {
       </div>
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(15rem,0.75fr)]">
         <ApplicationStatusChart distribution={statusDistribution} />
-        <DashboardSummary items={summaries} />
+        <SummaryCard items={summaries} />
       </div>
       <div className="mt-5">
         <RecentApplications applications={applications} />
