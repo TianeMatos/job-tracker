@@ -68,3 +68,10 @@ export function validationError(error: z.ZodError): ActionResult<never> {
     error: { message: z.prettifyError(error), code: 400 },
   };
 }
+
+export function unwrapAction<T>(result: ActionResult<T>): T {
+  if (!result.success) {
+    throw new Error(result.error.message ?? "Erro ao executar ação");
+  }
+  return result.data;
+}
