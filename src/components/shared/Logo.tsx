@@ -44,7 +44,7 @@ export default function LogoMark({
           />
         </svg>
         {showText && (
-          <span className={cn("font-semibold tracking-wider font-serif", sizeText)}>
+          <span className={cn("font-bold tracking-wider font-serif", sizeText)}>
             Job<span className="text-brand-gold">Tracker</span>
           </span>
         )}
