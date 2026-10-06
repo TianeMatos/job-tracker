@@ -109,7 +109,7 @@ export default function AppSidebar({ user }: { user: SidebarUser }) {
       <SidebarHeader>
         <LogoMark
           showText
-          sizeText="text-[25px]"
+          sizeText="text-[27px]"
           size={43}
           className="text-primary-foreground"
         />
