@@ -30,7 +30,7 @@ export default function RecentApplications({
         <CardAction>
           <Link
             href="/applications"
-            className={`px-2 py-3 text-xs text-secondary/50 transition-all hover:bg-primary/12 dark:hover:bg-primary/12 dark:hover:text-primary hover:scale-105 sm:px-4 sm:py-5 sm:text-sm ${buttonVariants({ variant: "ghost", size: "default" })}`}
+            className={`px-2 py-3 text-xs text-secondary/50 transition-all hover:bg-primary/12! hover:text-primary! sm:px-4 sm:py-5 sm:text-sm ${buttonVariants({ variant: "ghost", size: "default" })}`}
           >
             Ver Todas
             <ArrowRight aria-hidden="true" />

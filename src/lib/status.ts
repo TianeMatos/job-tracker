@@ -30,7 +30,7 @@ export const STATUS_CONFIG: Record<
   },
   WITHDRAWN: {
     label: "Desistência",
-    badgeClassName: "bg-status-withdrawn/50 text-status-withdrawn dark:text-status-withdrawn/50",
+    badgeClassName: "bg-status-withdrawn/50 text-status-withdrawn",
   },
   HIRED: {
     label: "Contratação",
