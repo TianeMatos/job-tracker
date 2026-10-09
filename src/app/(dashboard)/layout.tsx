@@ -26,8 +26,8 @@ export default async function DashboardLayout({
           />
           <LogoMark
             showText
-            sizeText="text-2xl"
-            size={40}
+            sizeText="text-[21px]"
+            size={30}
             className="text-secondary-foreground"
           />
         </header>
