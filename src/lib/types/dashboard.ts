@@ -1,4 +1,3 @@
-// lib/metrics.ts
 import { LucideIcon } from "lucide-react";
 import { ApplicationStatus } from "@/schemas/application";
 

@@ -12,7 +12,7 @@ export async function requireAuth() {
   const session = await getCurrentSession();
 
   if (!session) {
-    throw new AuthError();
+    throw new AuthError("Não Autenticado! Tente Fazer Login.");
   }
 
   return session;
