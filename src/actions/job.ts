@@ -6,6 +6,7 @@ import {
 } from "@/lib/action-helpers";
 import { requireAuth } from "@/lib/auth/auth-session";
 import prisma from "@/lib/prisma";
+import { jobListSelect } from "@/lib/types/jobs";
 import { createJobFormSchema } from "@/schemas/createJobForm";
 import { jobIdSchema, updateJobSchema } from "@/schemas/job";
 import { paginationInputSchema } from "@/schemas/pagination";
@@ -68,25 +69,7 @@ export async function getJobs(input: unknown) {
     const [jobs, total] = await Promise.all([
       prisma.job.findMany({
         where: { userId: session.user.id, application: { is: null } },
-        select: {
-          id: true,
-          company: true,
-          role: true,
-          location: true,
-          workplaceType: true,
-          employmentType: true,
-          salary: true,
-          deadline: true,
-          source: true,
-          createdAt: true,
-          application: {
-            select: {
-              id: true,
-              status: true,
-              appliedAt: true,
-            },
-          },
-        },
+        select: jobListSelect,
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
