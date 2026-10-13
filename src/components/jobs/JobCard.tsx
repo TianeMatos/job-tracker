@@ -11,8 +11,13 @@ import { buttonVariants } from "@/components/ui/button";
 import { JobListItem } from "@/lib/types/jobs";
 import { cn, formatSavedAt } from "@/lib/utils";
 import { EMPLOYMENT_LABEL, WORKPLACE_LABEL } from "@/lib/job-labels";
+<<<<<<< HEAD
 import { Globe, MapPin, Pencil, Send, Wallet } from "lucide-react";
 import { DeleteJobButton } from "./DeleteJobButton";
+=======
+import { Globe, MapPin, Pencil, Wallet } from "lucide-react";
+import { DeleteJobDialog } from "./DeleteJobDialog";
+>>>>>>> b06662a (chore(delete-job-dialog): implement DeleteJobDialog component for job deletion)
 import Link from "next/link";
 
 export function JobCard({ item }: { item: JobListItem }) {
@@ -93,7 +98,7 @@ export function JobCard({ item }: { item: JobListItem }) {
         >
           <Pencil className="size-4" aria-hidden="true" />
         </Link>
-        <DeleteJobButton
+        <DeleteJobDialog
           jobId={item.id}
           label={`${item.role} - ${item.company}`}
         />
