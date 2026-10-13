@@ -20,11 +20,11 @@ export default function RecentApplications({
 }) {
   return (
     <Card className="rounded-2xl border border-border bg-card shadow-card gap-0 last:pb-0">
-      <CardHeader className="grid grid-cols-2 grid-rows-2 gap-x-3 border-b border-b-border">
+      <CardHeader className="gap-x-3 border-b border-b-border">
         <CardTitle className="text-base font-bold text-secondary tracking-tight">
           Candidaturas Recentes
         </CardTitle>
-        <CardDescription className="col-span-1 mt-1 text-xs text-foreground/65 sm:text-sm">
+        <CardDescription className="mt-1 text-xs text-foreground/65 sm:text-sm">
           Últimas Movimentações Registradas
         </CardDescription>
         <CardAction>
@@ -32,7 +32,7 @@ export default function RecentApplications({
             href="/applications"
             className={`px-2 py-3 text-xs text-secondary/50 transition-all hover:bg-primary/12! hover:text-primary! sm:px-4 sm:py-5 sm:text-sm ${buttonVariants({ variant: "ghost", size: "default" })}`}
           >
-            Ver Todas
+            <span className="hidden sm:inline">Ver Todas</span>
             <ArrowRight aria-hidden="true" />
           </Link>
         </CardAction>
@@ -59,7 +59,7 @@ export default function RecentApplications({
                   <h3 className="truncate text-sm font-semibold text-card-foreground">
                     {item.role}
                   </h3>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  <p className="mt-0.5 wrap-break-word text-xs text-muted-foreground">
                     {item.company} · {item.date}
                   </p>
                 </div>
