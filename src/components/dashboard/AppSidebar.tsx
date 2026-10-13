@@ -160,7 +160,7 @@ export default function AppSidebar({ user }: { user: SidebarUser }) {
           disabled={isPending}
           aria-label="Sair"
           title="Sair"
-          className="text-muted/80 dark:hover:bg-primary/90 dark:hover:text-primary-foreground
+          className="text-muted/80 hover:bg-primary/90! hover:text-primary-foreground!
           cursor-pointer transition-colors"
         >
           <LogOutIcon size={22} aria-hidden="true" />

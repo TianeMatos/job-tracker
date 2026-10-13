@@ -25,11 +25,11 @@ export default function SummaryCard({ items }: { items: Summary[] }) {
               key={item.label}
               className="flex justify-between gap-5 py-1 last:pb-0"
             >
-              <span className="text-sm font-medium text-foreground/65 leading-tight mb-1.5">
+              <span className="text-[13px] font-medium text-foreground/65 leading-tight mb-1.5 sm:text-sm">
                 {item.label}
               </span>
               <span className="text-2xl font-bold text-card-foreground tabular-nums leading-none" style={{ color: item.color }}>
-                {item.value}
+                {item.value !== "undefined" ? item.value : "0"}
               </span>
             </div>
           ))
