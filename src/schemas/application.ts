@@ -1,3 +1,4 @@
+import { APPLY_STATUSES } from "@/lib/job-labels";
 import z from "zod";
 
 export const applicationStatusEnum = z.enum([
@@ -34,13 +35,22 @@ export const applicationIdSchema = z.uuid({
   error: "ID da candidatura inválido.",
 });
 
-export const applyToJobSchema = applicationDetailsSchema;
+export const applySchema = z.object({
+  jobId: z.uuid({
+    error: "ID da candidatura inválido.",
+  }),
+  status: z.enum(APPLY_STATUSES).default("APPLIED"),
+  appliedAt: z.coerce
+    .date()
+    .max(new Date(), "A data não pode ser no futuro")
+    .optional(),
+});
 
-export type ApplicationStatus = z.infer<
-  typeof applicationStatusEnum
->;
+export type ApplicationStatus = z.infer<typeof applicationStatusEnum>;
 
 export type UpdateApplicationStatusInput = z.infer<
   typeof updateApplicationStatusSchema
 >;
 export type ApplicationDetailsSchema = z.infer<typeof applicationDetailsSchema>;
+
+export type ApplyInput = z.infer<typeof applySchema>

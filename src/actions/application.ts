@@ -9,50 +9,53 @@ import {
   applicationIdSchema,
   applicationStatusEnum,
 } from "@/schemas/application";
-import { jobIdSchema } from "@/schemas/job";
+import { applySchema } from "@/schemas/application";
 import { revalidatePath } from "next/cache";
 
 //* Create Application
-export async function applyToJob(jobId: string) {
-  const idValidation = jobIdSchema.safeParse(jobId);
-  if (!idValidation.success) return validationError(idValidation.error);
+export async function applyToJob(input: unknown) {
+  const validation = applySchema.safeParse(input);
+  if (!validation.success) return validationError(validation.error);
+  const { jobId, appliedAt, status } = validation.data;
 
   return runAction(async () => {
     const session = await requireAuth();
 
-    const job = await prisma.job.findUniqueOrThrow({
-      where: { id: idValidation.data, userId: session.user.id },
-      include: { application: true },
+    const job = await prisma.job.findFirst({
+      where: { id: jobId, userId: session.user.id },
+      select: { id: true, application: { select: { id: true } } },
     });
+
+    if (!job) throw new BusinessError("Vaga não encontrada.");
 
     if (job.application)
       throw new BusinessError("Você já se candidatou a esta vaga.");
 
-    const positionAtEnd = await prisma.application.count({
-      where: { userId: session.user.id, status: "APPLIED" },
-    });
-
-    const application = await prisma.application.create({
-      data: {
-        userId: session.user.id,
-        jobId: job.id,
-        status: "APPLIED",
-        position: positionAtEnd,
-        statusHistory: {
-          create: {
-            status: "APPLIED",
+    await prisma.$transaction(async (tx) => {
+      const positionAtEnd = await tx.application.count({
+        where: { userId: session.user.id, status: status ?? "APPLIED", },
+      });
+      await tx.application.create({
+        data: {
+          userId: session.user.id,
+          jobId: job.id,
+          status: status ?? "APPLIED",
+          appliedAt: appliedAt ?? new Date(),
+          position: positionAtEnd,
+          statusHistory: {
+            create: {
+              status: status ?? "APPLIED",
+            },
           },
         },
-      },
+      });
     });
 
     revalidatePath("/saved-jobs");
     revalidatePath("/kanban");
     revalidatePath("/jobs");
-    revalidatePath(`/jobs/${application.jobId}`);
+    revalidatePath(`/jobs/${jobId}`);
     revalidatePath("/dashboard");
-
-    return application;
   });
 }
 

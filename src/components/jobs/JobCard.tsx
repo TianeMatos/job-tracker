@@ -11,9 +11,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { JobListItem } from "@/lib/types/jobs";
 import { cn, formatSavedAt } from "@/lib/utils";
 import { EMPLOYMENT_LABEL, WORKPLACE_LABEL } from "@/lib/job-labels";
-import { Globe, MapPin, Pencil, Send, Wallet } from "lucide-react";
+import { Globe, MapPin, Pencil, Wallet } from "lucide-react";
 import { DeleteJobButton } from "./DeleteJobButton";
 import Link from "next/link";
+import { ApplyToJobDialog } from "./ApplyToJobDialog";
 
 export function JobCard({ item }: { item: JobListItem }) {
   const meta = [
@@ -73,16 +74,7 @@ export function JobCard({ item }: { item: JobListItem }) {
         </p>
       </CardContent>
       <CardFooter className="p-0 mt-4 gap-1 border-t border-border [.border-t]:pt-3">
-        <Link
-          href={`/jobs/${item.id}/apply`}
-          className={cn(
-            buttonVariants({ variant: "default", size: "sm" }),
-            "mr-auto py-5 text-xs sm:text-sm",
-          )}
-        >
-          <Send className="size-3.5" aria-hidden="true" />
-          Candidatar-se
-        </Link>
+        <ApplyToJobDialog jobId={item.id} jobRole={item.role} jobCompany={item.company} />
         <Link
           href={`/jobs/${item.id}/edit`}
           className={cn(
