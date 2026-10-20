@@ -24,11 +24,9 @@ export default function DashboardError({
       <p className="mt-3 max-w-md text-sm text-foreground/65 sm:text-base">
         Não Conseguimos Carregar o Dashboard.
       </p>
-      {error.message && (
-        <p className="max-w-md text-sm text-foreground/65 sm:text-base">
-          {error.message}
-        </p>
-      )}
+      <p className="text-sm text-foreground/65 sm:text-base">
+        Tente Novamente em Instantes
+      </p>
 
       {error.digest && (
         <p className="mt-2 font-mono text-xs text-muted-foreground">
@@ -40,7 +38,7 @@ export default function DashboardError({
         variant={"default"}
         onClick={reset}
         size="lg"
-        className="mt-8 font-semibold shadow-md cursor-pointer"
+        className="mt-8 px-4 font-semibold shadow-md cursor-pointer"
       >
         <RotateCcw className="size-4" aria-hidden="true" />
         Recarregar Página

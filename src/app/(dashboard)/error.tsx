@@ -21,8 +21,10 @@ export default function ErrorPage({
       </h1>
 
       <p className="mt-3 max-w-md text-sm text-foreground/65 sm:text-base">
-        Não conseguimos carregar esta parte do JobTracker. Tente novamente em
-        alguns instantes.
+        Não conseguimos carregar esta parte do JobTracker.
+      </p>
+      <p className="text-sm text-foreground/65 sm:text-base">
+        Tente Novamente em Instantes
       </p>
 
       {error.digest && (
@@ -35,7 +37,7 @@ export default function ErrorPage({
         variant={"default"}
         onClick={reset}
         size="lg"
-        className="mt-8 font-semibold shadow-md cursor-pointer"
+        className="mt-8 px-4 font-semibold shadow-md cursor-pointer"
       >
         <RotateCcw className="size-4" aria-hidden="true" />
         Recarregar Página
