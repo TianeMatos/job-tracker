@@ -1,15 +1,13 @@
 import z from "zod";
+import { dateOnly, emptyToUndefined, jobIdSchema, optionalText } from "./job";
+import { ApplicationStatus as ApplicationStatusPrisma } from "@/generated/prisma/client";
 
-export const applicationStatusEnum = z.enum([
-  "APPLIED",
-  "IN_REVIEW",
-  "INTERVIEWING",
-  "TECHNICAL_TEST",
-  "PROPOSAL",
-  "WITHDRAWN",
-  "REJECTED",
-  "HIRED",
-]);
+export const applicationStatusEnum = z.enum(ApplicationStatusPrisma);
+
+const appliedDate = dateOnly.refine(
+  (d) => !d || d.getTime() <= Date.now() + 24 * 60 * 60 * 1000,
+  { error: "A data da candidatura não pode ser no futuro." },
+);
 
 export const updateApplicationStatusSchema = z.object({
   status: applicationStatusEnum,
@@ -17,13 +15,13 @@ export const updateApplicationStatusSchema = z.object({
 });
 
 export const applicationDetailsSchema = z.object({
-  appliedAt: z.coerce.date().optional(),
-  contactName: z.string().trim().optional(),
-  contactEmail: z
-    .email({ error: "E-mail do contato inválido." })
-    .or(z.literal(""))
-    .optional(),
-  interviewDate: z.coerce.date().optional(),
+  appliedAt: appliedDate,
+  contactName: optionalText,
+  contactEmail: z.preprocess(
+    emptyToUndefined,
+    z.email({ error: "E-mail do contato inválido." }).optional(),
+  ),
+  interviewDate: dateOnly,
 });
 
 export const reorderApplicationSchema = z.object({
@@ -34,13 +32,11 @@ export const applicationIdSchema = z.uuid({
   error: "ID da candidatura inválido.",
 });
 
-export const applyToJobSchema = applicationDetailsSchema;
+export const applySchema = z.object({
+  jobId: jobIdSchema,
+  status: applicationStatusEnum.default("APPLIED"),
+  appliedAt: appliedDate,
+});
 
-export type ApplicationStatus = z.infer<
-  typeof applicationStatusEnum
->;
+export type ApplicationStatus = z.infer<typeof applicationStatusEnum>;
 
-export type UpdateApplicationStatusInput = z.infer<
-  typeof updateApplicationStatusSchema
->;
-export type ApplicationDetailsSchema = z.infer<typeof applicationDetailsSchema>;
