@@ -12,7 +12,7 @@ import { JobListItem } from "@/lib/types/jobs";
 import { cn, formatSavedAt } from "@/lib/utils";
 import { EMPLOYMENT_LABEL, WORKPLACE_LABEL } from "@/lib/job-labels";
 import { Globe, MapPin, Pencil, Wallet } from "lucide-react";
-import { DeleteJobButton } from "./DeleteJobButton";
+import { DeleteJobDialog } from "./DeleteJobDialog";
 import Link from "next/link";
 import { ApplyToJobDialog } from "./ApplyToJobDialog";
 
@@ -85,7 +85,7 @@ export function JobCard({ item }: { item: JobListItem }) {
         >
           <Pencil className="size-4" aria-hidden="true" />
         </Link>
-        <DeleteJobButton
+        <DeleteJobDialog
           jobId={item.id}
           label={`${item.role} - ${item.company}`}
         />

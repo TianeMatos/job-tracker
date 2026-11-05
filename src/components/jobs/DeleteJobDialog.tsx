@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export function DeleteJobButton({
+export function DeleteJobDialog({
   jobId,
   label,
 }: {
