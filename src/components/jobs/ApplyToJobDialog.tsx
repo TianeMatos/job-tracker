@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Send } from "lucide-react";
+import { AlertCircle, Loader2, Send } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -92,7 +92,7 @@ export function ApplyToJobDialog({
             {...props}
             variant="default"
             size="sm"
-            className={"mr-auto py-5 text-xs sm:text-sm"}
+            className={"mr-auto py-5 text-xs sm:text-sm cursor-pointer"}
           >
             <Send className="size-3.5" aria-hidden="true" />
             Candidatar-se
@@ -158,7 +158,8 @@ export function ApplyToJobDialog({
             </Field>
           </FieldGroup>
           {error && (
-            <FieldError className="mt-3 px-3 py-2 rounded-md bg-destructive/10 text-destructive text-sm">
+            <FieldError className="flex gap-2 mt-3 px-3 py-2 items-center rounded-md bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="size-4" />
               {error}
             </FieldError>
           )}
