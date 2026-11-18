@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
-import { AuthError } from "../errors";
+import { redirect } from "next/navigation";
 
 export async function getCurrentSession() {
   return auth.api.getSession({
@@ -12,7 +12,7 @@ export async function requireAuth() {
   const session = await getCurrentSession();
 
   if (!session) {
-    throw new AuthError("Não Autenticado! Tente Fazer Login.");
+    redirect("/login");
   }
 
   return session;
