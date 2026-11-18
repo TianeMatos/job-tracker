@@ -1,4 +1,4 @@
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 interface LogoProps {

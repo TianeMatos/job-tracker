@@ -9,6 +9,7 @@ type Props = {
   errors?: { status?: string | string[]; appliedAt?: string | string[] };
   disabled?: boolean;
   className?: string;
+  autoFocusStatus?: boolean;
 };
 
 export function ApplicationFields({
@@ -17,8 +18,10 @@ export function ApplicationFields({
   errors,
   disabled,
   className,
+  autoFocusStatus,
 }: Props) {
   const today = toDateInputValue(new Date());
+
   return (
     <div className={cn("grid gap-4", className)}>
       <SelectField
@@ -29,6 +32,7 @@ export function ApplicationFields({
         onValueChange={(v) => onStatusChange(v ?? "APPLIED")}
         error={errors?.status}
         disabled={disabled}
+        autoFocus={autoFocusStatus}
       />
 
       <FormField

@@ -40,7 +40,7 @@ export function FormCheckbox({
           onCheckedChange={onCheckedChange}
           disabled={disabled}
           aria-invalid={!!message}
-          className="mt-0.5 size-5.5 rounded-md! border border-primary bg-transparent! data-checked:bg-primary!"
+          className="peer mt-0.5 size-5.5 rounded-md! border border-primary bg-transparent! data-checked:bg-primary!"
         />
         <div className="grid gap-1.5">
           <label

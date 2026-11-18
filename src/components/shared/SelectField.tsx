@@ -33,6 +33,7 @@ type SelectFieldProps<T extends string> = {
   id?: string;
   fieldClassName?: string;
   className?: string;
+  autoFocus?: boolean;
 };
 
 export function SelectField<T extends string>({
@@ -51,6 +52,7 @@ export function SelectField<T extends string>({
   id,
   fieldClassName,
   className,
+  autoFocus,
 }: SelectFieldProps<T>) {
   const autoId = useId();
   const selectId = id ?? `${name}-${autoId}`;
@@ -71,7 +73,7 @@ export function SelectField<T extends string>({
           </span>
         )}
       </FieldLabel>
-
+        {/* fix: Select popup desalinhado */}
       <Select
         name={name}
         items={items}
@@ -85,16 +87,17 @@ export function SelectField<T extends string>({
       >
         <SelectTrigger
           id={selectId}
+          autoFocus={autoFocus}
           aria-invalid={!!message}
           className={cn(
             "w-full px-3.5 py-2.5! rounded-lg text-sm text-secondary bg-transparent! border-border! placeholder:text-muted-foreground",
             className,
-          )}
+          )} 
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        {/* Fix: Quando rolo o diolog o conteúdo do select vai junto  */}
-        <SelectContent alignItemWithTrigger>
+
+        <SelectContent sideOffset={5} alignItemWithTrigger={false}>
           <SelectGroup>
             {clearLabel && <SelectItem value={NONE}>{clearLabel}</SelectItem>}
             {Object.entries<string>(options).map(([v, text]) => (
