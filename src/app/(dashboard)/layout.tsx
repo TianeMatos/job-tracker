@@ -32,7 +32,7 @@ export default async function DashboardLayout({
           />
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto max-w-360 px-4 py-7 sm:px-6 sm:py-9 lg:p-8 xl:max-w-400">
+        <main className="px-4 py-7 min-h-0 w-full flex-1 overflow-y-auto overscroll-contain sm:px-6 sm:py-9 lg:p-8">
           {children}
         </main>
       </SidebarInset>

@@ -1,10 +1,9 @@
 import { getJobs } from "@/actions/job";
+import { AddJobDialog } from "@/components/jobs/AddJobDialog";
 import { JobCard } from "@/components/jobs/JobCard";
 import { PaginationComponent } from "@/components/shared/Pagination";
-import { buttonVariants } from "@/components/ui/button";
 import { unwrapAction } from "@/lib/action-helpers";
-import { Bookmark, Plus } from "lucide-react";
-import Link from "next/link";
+import { Bookmark } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 
 export default async function SavedJobsPage({
@@ -34,8 +33,8 @@ export default async function SavedJobsPage({
   }
 
   return (
-    <div className="container">
-      <section className="mb-7 grid grid-cols-1 gap-5 place-content-between items-center sm:grid-cols-[1fr_190px] rounded-">
+    <div className="container mx-auto">
+      <section className="mb-7 grid grid-cols-1 gap-5 place-content-between items-center sm:grid-cols-[1fr_auto]">
         <div className="flex flex-col gap-3 sm:items-start sm:justify-between">
           <p className="text-xs text-primary font-semibold uppercase tracking-widest">
             Oportunidades
@@ -48,28 +47,20 @@ export default async function SavedJobsPage({
             processo.
           </p>
         </div>
-        {jobs.length !== 0 && (
-          <Link
-            href="/jobs/new"
-            className={`w-full items-center gap-1 font-semibold shadow-md sm:w-auto ${buttonVariants({ variant: "default", size: "lg" })}`}
-          >
-            <Plus className="size-5" />
-            Adicionar Vaga
-          </Link>
-        )}
+        <AddJobDialog />
       </section>
-      <section className="pt-2 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-2">
-          <div className="col-span-full ml-2 text-sm font-medium">
-            {metaData.total > 0 && (
-              <p>
-                {metaData.total}{" "}
-                {metaData.total === 1 ? "vaga salva" : "vagas salvas"}
-              </p>
-            )}
-          </div>
+      <section className="pt-2 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="col-span-full ml-2 text-sm font-medium">
+          {metaData.total > 0 && (
+            <p>
+              {metaData.total}{" "}
+              {metaData.total === 1 ? "vaga salva" : "vagas salvas"}
+            </p>
+          )}
+        </div>
         {jobs.length !== 0 ? (
           jobs.map((job) => (
-            <article key={job.id} >
+            <article key={job.id} aria-labelledby={`job-${job.id}-title`}>
               <JobCard item={job} />
             </article>
           ))
@@ -84,15 +75,6 @@ export default async function SavedJobsPage({
             <p className="mb-8 text-muted-foreground text-base">
               Salve oportunidades que você encontrar para acompanhá-las depois.
             </p>
-            <div>
-              <Link
-                href={`/jobs/new`}
-                className={`${buttonVariants({ size: "lg", variant: "default", className: "self-center px-7" })}`}
-              >
-                <Plus className="size-4 " />
-                Adicionar Primeira Vaga
-              </Link>
-            </div>
           </div>
         )}
       </section>
