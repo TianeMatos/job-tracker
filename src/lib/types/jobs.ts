@@ -5,6 +5,8 @@ export const jobListSelect = {
   company: true,
   role: true,
   location: true,
+  description: true,
+  jobUrl: true,
   workplaceType: true,
   employmentType: true,
   salary: true,
