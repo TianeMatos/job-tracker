@@ -1,36 +1,15 @@
 "use client";
 
-import { AlertCircle, Loader2, Send } from "lucide-react";
+import { BriefcaseBusiness, Send, SendIcon } from "lucide-react";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
+import { Dialog, DialogTrigger } from "../ui/dialog";
 import { useState, useTransition } from "react";
-import { Input } from "../ui/input";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "../ui/field";
-import { toDateInputValue } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { APPLY_STATUS_LABEL, ApplyStatus } from "@/lib/job-labels";
+import { FieldDescription, FieldLegend } from "../ui/field";
+import { ApplyStatus } from "@/lib/job-labels";
 import { toast } from "../ui/toast";
 import { applyToJob } from "@/actions/application";
+import { ApplicationFields } from "../shared/ApplicationFields";
+import { JobDialogShell } from "./JobDialogShell";
 
 type ApplyToJobDialogProps = {
   jobId: string;
@@ -45,14 +24,14 @@ export function ApplyToJobDialog({
 }: ApplyToJobDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [appliedAt, setAppliedAt] = useState(toDateInputValue(new Date()));
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Partial<Record<string, string[]>>>({});
   const [status, setStatus] = useState<ApplyStatus>("APPLIED");
 
   function resetForm() {
     setStatus("APPLIED");
-    setAppliedAt(toDateInputValue(new Date()));
-    setError(null);
+    setGeneralError(null);
+    setErrors({});
   }
 
   function handleOpenChange(next: boolean) {
@@ -65,22 +44,42 @@ export function ApplyToJobDialog({
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(null);
+    setGeneralError(null);
+    setErrors({});
+    const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {
-      const result = await applyToJob({ jobId, status, appliedAt });
-      if (!result.success) {
-        setError(
-          result.error.message ?? "Não foi possível registrar a candidatura.",
-        );
-        return;
-      }
-      toast.add({
-        type: "success",
-        description: `Candidatura a "${jobRole}" registrada!`,
-      });
+      try {
+        const result = await applyToJob({
+          jobId,
+          status,
+          appliedAt: formData.get("appliedAt"),
+        });
 
-      resetForm();
+        if (!result.success) {
+          setErrors(result.error.fields ?? {});
+          setGeneralError(result.error.message);
+
+          const firstField = Object.keys(result.error.fields ?? {})[0];
+          if (firstField) {
+            requestAnimationFrame(() => {
+              document
+                .querySelector<HTMLElement>(`[name="${firstField}"]`)
+                ?.focus();
+            });
+          }
+          return;
+        }
+
+        toast.add({
+          type: "success",
+          description: `A candidatura "${jobRole}" foi registrada!`,
+        });
+        resetForm();
+        setOpen(false);
+      } catch {
+        setGeneralError("Algo deu errado. Tente novamente.");
+      }
     });
   }
 
@@ -100,93 +99,38 @@ export function ApplyToJobDialog({
         )}
       />
 
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-base">Registrar Candidatura</DialogTitle>
-          <DialogDescription>
-            Confirme os dados para adicionar esta vaga às suas candidaturas.
-          </DialogDescription>
+      <JobDialogShell
+        icon={SendIcon}
+        title="Registrar Candidatura"
+        description="Confirme os dados para adicionar esta vaga às suas candidaturas."
+        submitLabel={"Salvar"}
+        pendingLabel="Salvando..."
+        isPending={isPending}
+        generalError={generalError}
+        onSubmit={handleSubmit}
+        contentClassName="h-auto max-h-[90dvh] sm:max-w-md"
+      >
+        <div className="mb-4 flex items-center gap-2">
+          <BriefcaseBusiness className="size-4 text-primary" />
+          <h3 className="text-sm font-medium">Informações da vaga</h3>
+        </div>
+        <div className="p-3 rounded-sm border-l-2 border-primary/70 bg-accent/40 ">
+          <h4 className="font-serif text-sm font-medium text-secondary">
+            {jobRole}
+          </h4>
+          <p className="text-foreground/80 text-xs">{jobCompany}</p>
+        </div>
 
-          <div className="flex flex-col gap-0.5 mt-3 bg-brand-gold/20 rounded-2xl p-3">
-            <p className="text-xs text-primary font-medium uppercase tracking-widest">
-              Vaga
-            </p>
-            <h2 className="font-serif text-sm font-medium text-secondary">
-              {jobRole}
-            </h2>
-            <p className="text-foreground/60 text-xs">{jobCompany}</p>
-          </div>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="status">Status</FieldLabel>
-              <Select
-                items={APPLY_STATUS_LABEL}
-                value={status}
-                onValueChange={(v) => setStatus(v as ApplyStatus)}
-                disabled={isPending}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(APPLY_STATUS_LABEL).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="appliedAt">Data da candidatura</FieldLabel>
-              <Input
-                id="appliedAt"
-                name="appliedAt"
-                type="date"
-                value={appliedAt}
-                onChange={(e) => setAppliedAt(e.target.value)}
-                max={toDateInputValue(new Date())}
-                disabled={isPending}
-              />
-              <FieldDescription className="px-2 tracking-tight leading-snug">
-                Preenchida automaticamente com a data atual, mas pode ser
-                alterada.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-          {error && (
-            <FieldError className="flex gap-2 mt-3 px-3 py-2 items-center rounded-md bg-destructive/10 text-destructive text-sm">
-              <AlertCircle className="size-4" />
-              {error}
-            </FieldError>
-          )}
-          <DialogFooter className="mt-5">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isPending}
-              onClick={() => handleOpenChange(false)}
-              className="cursor-pointer bg-transparent! hover:bg-muted-foreground/10! py-5"
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant={"default"}
-              type="submit"
-              disabled={isPending}
-              className="cursor-pointer py-5 px-4"
-            >
-              {isPending && (
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              )}
-              Confirmar candidatura
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+        <ApplicationFields
+          status={status}
+          onStatusChange={setStatus}
+          errors={{
+            status: errors["application.status"],
+            appliedAt: errors["application.appliedAt"],
+          }}
+          disabled={isPending}
+        />
+      </JobDialogShell>
     </Dialog>
   );
 }

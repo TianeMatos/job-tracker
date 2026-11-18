@@ -27,30 +27,30 @@ export function DeleteJobDialog({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  function handleDelete(e: React.MouseEvent) {
+  function handleDelete(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
 
     startTransition(async () => {
       try {
         const result = await deleteJob(jobId);
-        if (result.success) {
-          toast.add({
-            type: "success",
-            description: "Vaga excluída com sucesso.",
-          });
-        } else {
+        if (!result.success) {
           toast.add({
             type: "error",
-            description: "Não foi possível excluir a vaga.",
+            description: `${result.error.message ?? "Não foi possível excluir a vaga."}`,
           });
+          return;
         }
-      } catch {
+
+        toast.add({
+          type: "success",
+          description: "Vaga excluída com sucesso.",
+        });
+        setOpen(false);
+      } catch (error) {
         toast.add({
           type: "error",
-          description: "Não foi possível excluir a vaga.",
+          description: `${error ?? "Não foi possível excluir a vaga."}`,
         });
-      } finally {
-        setOpen(false);
       }
     });
   }
