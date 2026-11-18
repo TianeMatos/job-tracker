@@ -14,7 +14,11 @@ export type PaginatedResult<T> = {
   };
 };
 
-export type ActionError = { message: string; code?: number };
+export type ActionError = {
+  message: string;
+  code?: number;
+  fields?: Record<string, string[]>;
+};
 
 export type ActionResult<T> =
   | { success: true; data: T }
@@ -28,13 +32,16 @@ export async function runAction<T>(
     return { success: true, data };
   } catch (error) {
     if (isAPIError(error)) {
-      return { success: false, error: { message: error.message, code: error.statusCode } }
+      return {
+        success: false,
+        error: { message: error.message, code: error.statusCode },
+      };
     }
-    
+
     if (error instanceof AuthError) {
       return { success: false, error: { message: error.message, code: 401 } };
     }
-    
+
     if (error instanceof BusinessError) {
       return { success: false, error: { message: error.message } };
     }
@@ -63,9 +70,26 @@ export async function runAction<T>(
 }
 
 export function validationError(error: z.ZodError): ActionResult<never> {
+  const fields: Record<string, string[]> = {};
+
+  error.issues.forEach((issue) => {
+    const fieldName = issue.path.join(".") as string;
+    
+    if (fieldName) {
+      if (!fields[fieldName]) {
+        fields[fieldName] = [];
+      }
+      fields[fieldName].push(issue.message);
+    }
+  });
+
   return {
     success: false,
-    error: { message: z.prettifyError(error), code: 400 },
+    error: { 
+      message: "Verifique os campos destacados.", 
+      code: 400,
+      fields: fields
+    },
   };
 }
 

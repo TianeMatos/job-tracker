@@ -5,7 +5,7 @@ import { applicationDetailsSchema, applicationStatusEnum } from "./application";
 const jobNotAppliedSchema = z.object({
   ...jobSchema.shape,
   hasApplied: z.literal(false),
-  application: z.undefined().optional(),
+  application: z.null().optional(),
 });
 
 const jobAppliedSchema = z.object({
