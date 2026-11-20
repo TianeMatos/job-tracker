@@ -10,6 +10,7 @@ import { EMPLOYMENT_LABEL, WORKPLACE_LABEL } from "@/lib/job-labels";
 import { JobFields } from "./JobFields";
 import { JobDialogShell } from "./JobDialogShell";
 import { JobListItem } from "@/lib/types/jobs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function EditJobDialog({ item }: { item: JobListItem }) {
   const [open, setOpen] = useState(false);
@@ -45,28 +46,27 @@ export function EditJobDialog({ item }: { item: JobListItem }) {
     startTransition(async () => {
       try {
         const result = await updateJob(item.id, input);
-        
-        if (!result.success) {
-        setErrors(result.error.fields ?? {});
-        setGeneralError(result.error.message);
 
-        const firstField = Object.keys(result.error.fields ?? {})[0];
-        if (firstField) {
-          requestAnimationFrame(() => {
-            document
-              .querySelector<HTMLElement>(`[name="${firstField}"]`)
-              ?.focus();
-          });
+        if (!result.success) {
+          setErrors(result.error.fields ?? {});
+          setGeneralError(result.error.message);
+
+          const firstField = Object.keys(result.error.fields ?? {})[0];
+          if (firstField) {
+            requestAnimationFrame(() => {
+              document
+                .querySelector<HTMLElement>(`[name="${firstField}"]`)
+                ?.focus();
+            });
+          }
+          return;
         }
-        return;
-      }
 
         toast.add({
           type: "success",
           description: "Vaga atualizada com sucesso!",
         });
         setOpen(false);
-
       } catch {
         setGeneralError("Algo deu errado. Tente novamente.");
       }
@@ -75,18 +75,25 @@ export function EditJobDialog({ item }: { item: JobListItem }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Editar vaga"
-            className="cursor-pointer transition-colors bg-transparent! hover:bg-primary/10! hover:text-primary!"
-          >
-            <Pencil className="size-4" aria-hidden="true" />
-          </Button>
-        }
-      />
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DialogTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Editar vaga"
+                  className="cursor-pointer transition-colors bg-transparent! hover:bg-primary/10! hover:text-primary!"
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                </Button>
+              }
+            />
+          }
+        ></TooltipTrigger>
+        <TooltipContent>Editar</TooltipContent>
+      </Tooltip>
 
       <JobDialogShell
         icon={Pencil}

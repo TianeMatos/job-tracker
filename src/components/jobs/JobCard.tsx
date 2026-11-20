@@ -15,6 +15,8 @@ import { DeleteJobDialog } from "./DeleteJobDialog";
 import Link from "next/link";
 import { ApplyToJobDialog } from "./ApplyToJobDialog";
 import { EditJobDialog } from "./EditJobDialog";
+import { JobDetailsDialog } from "./JobDetailsDialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function JobCard({ item }: { item: JobListItem }) {
   const meta = [
@@ -33,8 +35,14 @@ export function JobCard({ item }: { item: JobListItem }) {
         <div className="flex flex-col gap-3.5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <CardTitle>
-              <h3 id={`job-${item.id}-title`} className="capitalize text-base line-clamp-2">
-                <Link href={`/jobs/${item.id}`} className="hover:text-primary hover:underline">
+              <h3
+                id={`job-${item.id}-title`}
+                className="capitalize text-base line-clamp-2"
+              >
+                <Link
+                  href={`/jobs/${item.id}`}
+                  className="hover:text-primary hover:underline"
+                >
                   {item.role}
                 </Link>
               </h3>
@@ -72,13 +80,20 @@ export function JobCard({ item }: { item: JobListItem }) {
             : `Salva ${formatSavedAt(item.createdAt)}`}
         </p>
       </CardContent>
-      <CardFooter className="p-0 pt-3! mt-4 gap-1 border-t border-border">
-        <ApplyToJobDialog jobId={item.id} jobRole={item.role} jobCompany={item.company} />
-        <EditJobDialog item={item} />
-        <DeleteJobDialog
+      <CardFooter className="p-0 pt-3! mt-4 justify-between gap-1 border-t border-border">
+        <ApplyToJobDialog
           jobId={item.id}
-          label={`${item.role} - ${item.company}`}
+          jobRole={item.role}
+          jobCompany={item.company}
         />
+        <div className="flex gap-1">
+          <JobDetailsDialog item={item} />
+          <EditJobDialog item={item} />
+          <DeleteJobDialog
+            jobId={item.id}
+            label={`${item.role} - ${item.company}`}
+          />
+        </div>
       </CardFooter>
     </Card>
   );

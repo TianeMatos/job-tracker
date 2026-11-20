@@ -4,23 +4,25 @@ import { BriefcaseBusiness, Send, SendIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogTrigger } from "../ui/dialog";
 import { useState, useTransition } from "react";
-import { FieldDescription, FieldLegend } from "../ui/field";
 import { ApplyStatus } from "@/lib/job-labels";
 import { toast } from "../ui/toast";
 import { applyToJob } from "@/actions/application";
 import { ApplicationFields } from "../shared/ApplicationFields";
 import { JobDialogShell } from "./JobDialogShell";
+import { cn } from "@/lib/utils";
 
 type ApplyToJobDialogProps = {
   jobId: string;
   jobRole: string;
   jobCompany: string;
+  className?: string; 
 };
 
 export function ApplyToJobDialog({
   jobId,
   jobRole,
   jobCompany,
+  className,
 }: ApplyToJobDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -90,10 +92,9 @@ export function ApplyToJobDialog({
           <Button
             {...props}
             variant="default"
-            size="sm"
-            className={"mr-auto py-5 text-xs sm:text-sm cursor-pointer"}
+            size="default"
+            className={cn("py-5 px- text-xs sm:text-sm cursor-pointer", className)}
           >
-            <Send className="size-3.5" aria-hidden="true" />
             Candidatar-se
           </Button>
         )}

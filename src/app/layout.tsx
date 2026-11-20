@@ -3,9 +3,13 @@ import { Fraunces, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-const plexSans = IBM_Plex_Sans({subsets:['latin'], variable:'--font-plex-sans'});
-const fraunces = Fraunces({subsets:['latin'], variable:'--font-fraunces'});
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  variable: "--font-plex-sans",
+});
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 
 export const metadata: Metadata = {
   title: "JobTracker",
@@ -20,8 +24,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn("h-full", fraunces.variable, plexSans.variable)}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster  />
+        <TooltipProvider>
+          {children}
+          <Toaster />
+        </TooltipProvider>
       </body>
     </html>
   );

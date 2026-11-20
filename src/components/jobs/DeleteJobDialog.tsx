@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function DeleteJobDialog({
   jobId,
@@ -62,20 +63,27 @@ export function DeleteJobDialog({
         if (!isPending) setOpen(next);
       }}
     >
-      <AlertDialogTrigger
-        render={(props) => (
-          <Button
-            {...props}
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={`Excluir vaga: ${label || "sem título"}`}
-            className="cursor-pointer transition-colors bg-transparent! hover:bg-destructive/10! hover:text-destructive!"
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-          </Button>
-        )}
-      />
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <AlertDialogTrigger
+              render={(props) => (
+                <Button
+                  {...props}
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label={`Excluir vaga: ${label || "sem título"}`}
+                  className="cursor-pointer transition-colors bg-transparent! hover:bg-destructive/10! hover:text-destructive!"
+                >
+                  <Trash2 className="size-4" aria-hidden="true" />
+                </Button>
+              )}
+            />
+          }
+        ></TooltipTrigger>
+        <TooltipContent>Excluir</TooltipContent>
+      </Tooltip>
 
       <AlertDialogContent>
         <AlertDialogHeader>
