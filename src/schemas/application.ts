@@ -4,15 +4,12 @@ import { ApplicationStatus as ApplicationStatusPrisma } from "@/generated/prisma
 
 export const applicationStatusEnum = z.enum(ApplicationStatusPrisma);
 
+export const kanbanStatusEnum = applicationStatusEnum.exclude(["WITHDRAWN"]);
+
 const appliedDate = dateOnly.refine(
-  (d) => !d || d.getTime() <= Date.now() + 24 * 60 * 60 * 1000,
+  (d) => !d || d.getTime() <= Date.now(),
   { error: "A data da candidatura não pode ser no futuro." },
 );
-
-export const updateApplicationStatusSchema = z.object({
-  status: applicationStatusEnum,
-  position: z.number().int().min(0).optional(),
-});
 
 export const applicationDetailsSchema = z.object({
   appliedAt: appliedDate,
@@ -24,7 +21,13 @@ export const applicationDetailsSchema = z.object({
   interviewDate: dateOnly,
 });
 
-export const reorderApplicationSchema = z.object({
+export const updateApplicationStatusSchema = z.object({
+  status: applicationStatusEnum,
+  position: z.number().int().min(0).optional(),
+});
+
+export const moveApplicationSchema = z.object({
+  status: kanbanStatusEnum,
   position: z.number().int().min(0),
 });
 
@@ -34,9 +37,10 @@ export const applicationIdSchema = z.uuid({
 
 export const applySchema = z.object({
   jobId: jobIdSchema,
-  status: applicationStatusEnum.default("APPLIED"),
+  status: applicationStatusEnum
+    .exclude(["REJECTED", "WITHDRAWN"])
+    .default("APPLIED"),
   appliedAt: appliedDate,
 });
 
 export type ApplicationStatus = z.infer<typeof applicationStatusEnum>;
-

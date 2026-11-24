@@ -1,13 +1,21 @@
 "use server";
 
 import { runAction, validationError } from "@/lib/action-helpers";
+import {
+  clampToNow,
+  closeGap,
+  moveInTx,
+  nextPosition,
+} from "@/lib/application-helpers";
 import { requireAuth } from "@/lib/auth/auth-session";
 import { BusinessError } from "@/lib/errors";
 import prisma from "@/lib/prisma";
+import { kanbanSelect } from "@/lib/types/applications";
 import {
   applicationDetailsSchema,
   applicationIdSchema,
   applicationStatusEnum,
+  moveApplicationSchema,
 } from "@/schemas/application";
 import { applySchema } from "@/schemas/application";
 import { revalidatePath } from "next/cache";
@@ -20,42 +28,40 @@ export async function applyToJob(input: unknown) {
 
   return runAction(async () => {
     const session = await requireAuth();
+    const userId = session.user.id;
 
     const job = await prisma.job.findFirst({
-      where: { id: jobId, userId: session.user.id },
+      where: { id: jobId, userId },
       select: { id: true, application: { select: { id: true } } },
     });
 
     if (!job) throw new BusinessError("Vaga não encontrada.");
-
     if (job.application)
       throw new BusinessError("Você já se candidatou a esta vaga.");
 
-    await prisma.$transaction(async (tx) => {
-      const positionAtEnd = await tx.application.count({
-        where: { userId: session.user.id, status: status ?? "APPLIED", },
-      });
+    const application = await prisma.$transaction(async (tx) => {
       await tx.application.create({
         data: {
-          userId: session.user.id,
+          userId,
           jobId: job.id,
-          status: status ?? "APPLIED",
-          appliedAt: appliedAt ?? new Date(),
-          position: positionAtEnd,
+          status: status,
+          appliedAt: clampToNow(appliedAt),
+          position: await nextPosition(tx, userId, status),
           statusHistory: {
             create: {
-              status: status ?? "APPLIED",
+              status: status,
             },
           },
         },
+        select: { id: true },
       });
     });
 
     revalidatePath("/saved-jobs");
     revalidatePath("/kanban");
-    revalidatePath("/jobs");
-    revalidatePath(`/jobs/${jobId}`);
     revalidatePath("/dashboard");
+
+    return application;
   });
 }
 
@@ -63,38 +69,13 @@ export async function applyToJob(input: unknown) {
 export async function getApplications() {
   return runAction(async () => {
     const session = await requireAuth();
+    const userId = session.user.id;
 
-    const applications = await prisma.application.findMany({
-      where: { userId: session.user.id, status: { not: "WITHDRAWN" } },
-      select: {
-        id: true,
-        status: true,
-        position: true,
-        appliedAt: true,
-        jobId: true,
-        // statusHistory: {
-        //   orderBy: {
-        //     createdAt: "asc",
-        //   },
-        // },
-
-        job: {
-          select: {
-            id: true,
-            company: true,
-            role: true,
-            location: true,
-            workplaceType: true,
-            employmentType: true,
-            salary: true,
-          },
-        },
-      },
-      orderBy: [{ status: "asc" }, { position: "asc" }],
-      take: 100,
+    return await prisma.application.findMany({
+      where: { userId, status: { not: "WITHDRAWN" } },
+      select: kanbanSelect,
+      orderBy: { position: "asc" },
     });
-
-    return applications;
   });
 }
 
@@ -105,9 +86,10 @@ export async function getApplicationById(id: string) {
 
   return runAction(async () => {
     const session = await requireAuth();
+    const userId = session.user.id;
 
-    const application = await prisma.application.findUniqueOrThrow({
-      where: { id: idValidation.data, userId: session.user.id },
+    return await prisma.application.findUniqueOrThrow({
+      where: { id: idValidation.data, userId },
       include: {
         job: true,
         notes: true,
@@ -118,8 +100,6 @@ export async function getApplicationById(id: string) {
         },
       },
     });
-
-    return application;
   });
 }
 
@@ -133,50 +113,18 @@ export async function updateApplicationStatus(id: string, input: unknown) {
 
   return runAction(async () => {
     const session = await requireAuth();
+    const userId = session.user.id;
 
-    const current = await prisma.application.findUniqueOrThrow({
-      where: { id: idValidation.data, userId: session.user.id },
-      select: { status: true, position: true, jobId: true },
-    });
+    const { statusChanged } = await prisma.$transaction((tx) =>
+      moveInTx(tx, userId, idValidation.data, dataValidation.data),
+    );
 
-    if (current.status === dataValidation.data) {
-      return prisma.application.findUniqueOrThrow({
-        where: { id: idValidation.data, userId: session.user.id },
-        select: { status: true, position: true, jobId: true },
-      });
+    if (statusChanged) {
+      revalidatePath("/kanban");
+      revalidatePath("/dashboard");
+      revalidatePath(`/applications/${idValidation.data}`);
     }
-
-    const application = await prisma.$transaction(async (tx) => {
-
-      await tx.application.updateMany({
-        where: {
-          userId: session.user.id,
-          status: current.status,
-          position: { gt: current.position },
-        },
-        data: { position: { decrement: 1 } },
-      });
-
-      const positionAtEnd = await tx.application.count({
-        where: { userId: session.user.id, status: dataValidation.data },
-      });
-
-      return tx.application.update({
-        where: { id: idValidation.data, userId: session.user.id },
-        data: {
-          status: dataValidation.data,
-          position: positionAtEnd,
-          statusHistory: { create: { status: dataValidation.data } },
-        },
-        select: { status: true, position: true, jobId: true },
-      });
-    });
-
-    revalidatePath("/kanban");
-    revalidatePath("/dashboard");
-    revalidatePath(`/jobs/${application.jobId}`);
-
-    return application;
+    return { statusChanged };
   });
 }
 
@@ -203,8 +151,6 @@ export async function updateApplicationDetails(id: string, input: unknown) {
       },
     });
 
-    revalidatePath(`/jobs/${application.jobId}`);
-
     return application;
   });
 }
@@ -216,20 +162,50 @@ export async function deleteApplication(id: string) {
 
   return runAction(async () => {
     const session = await requireAuth();
+    const userId = session.user.id;
 
-    const application = await prisma.application.delete({
-      where: { id: idValidation.data, userId: session.user.id },
-      select: {
-        id: true,
-        jobId: true,
-      },
+    const deleted = await prisma.$transaction(async (tx) => {
+      const current = await tx.application.findFirstOrThrow({
+        where: { id: idValidation.data, userId },
+        select: { id: true, status: true, position: true },
+      });
+
+      await tx.application.delete({ where: { id: current.id } });
+      await closeGap(tx, userId, current.status, current.position);
+
+      return { id: current.id };
     });
 
     revalidatePath("/kanban");
     revalidatePath("/saved-jobs");
-    revalidatePath(`/jobs/${application.jobId}`);
     revalidatePath("/dashboard");
 
-    return application;
+    return deleted;
+  });
+}
+
+export async function moveApplication(id: string, input: unknown) {
+  const idValidation = applicationIdSchema.safeParse(id);
+  if (!idValidation.success) return validationError(idValidation.error);
+
+  const dataValidation = moveApplicationSchema.safeParse(input);
+  if (!dataValidation.success) return validationError(dataValidation.error);
+
+  const { status: newStatus, position: requestedPosition } =
+    dataValidation.data;
+
+  return runAction(async () => {
+    const session = await requireAuth();
+    const userId = session.user.id;
+
+    const { positionChanged, statusChanged } = await prisma.$transaction(async (tx) =>
+      moveInTx(tx, userId, idValidation.data, newStatus, requestedPosition),
+    );
+
+    if (statusChanged) {
+      revalidatePath("/dashboard");
+    }
+    revalidatePath("/kanban");
+    return { statusChanged, positionChanged }
   });
 }
